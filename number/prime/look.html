@@ -61,14 +61,12 @@
         <div x-show="activeTab === 'nearest'" class="flex flex-col gap-5 bg-slate-900/60 border border-cyan-500/20 rounded-2xl p-5 sm:p-6 backdrop-blur">
             <div>
                 <h2 class="text-base sm:text-lg font-bold text-cyan-300 mb-1">指定した数の周辺の素数</h2>
-                <p class="text-xs text-slate-400">数値を入力すると、その数より小さい最大の素数と、大きい最小の素数を探すべ！</p>
+                <p class="text-xs text-slate-400">数値を入力すると、入力した瞬間にその数より小さい最大の素数と大きい最小の素数を探すべ！✨</p>
             </div>
 
-            <div class="flex flex-col sm:flex-row gap-3">
-                <input type="number" x-model.number="targetNumber" min="2" max="10000000" class="flex-grow bg-slate-950 border border-cyan-500/40 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-400 text-base">
-                <button @click="calcNearest()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20">
-                    <i data-lucide="search" class="w-4 h-4"></i> 探す
-                </button>
+            <!-- ボタンをなくして @input でリアルタイム連動！ -->
+            <div class="w-full">
+                <input type="number" x-model.number="targetNumber" @input="calcNearest()" min="2" max="10000000" class="w-full bg-slate-950 border border-cyan-500/40 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-400 text-base shadow-inner">
             </div>
 
             <!-- 結果表示 -->
@@ -93,14 +91,12 @@
         <div x-show="activeTab === 'nth'" class="flex flex-col gap-5 bg-slate-900/60 border border-cyan-500/20 rounded-2xl p-5 sm:p-6 backdrop-blur" style="display: none;">
             <div>
                 <h2 class="text-base sm:text-lg font-bold text-cyan-300 mb-1">N番目の素数を取得</h2>
-                <p class="text-xs text-slate-400">「100番目の素数」や「1000番目の素数」を一瞬で計算するべ！（最大10,000番目まで）</p>
+                <p class="text-xs text-slate-400">数値を打ち込むだけで「〇番目の素数」を一瞬で自動計算するべ！（最大10,000番目まで）🚀</p>
             </div>
 
-            <div class="flex flex-col sm:flex-row gap-3">
-                <input type="number" x-model.number="nthIndex" min="1" max="10000" class="flex-grow bg-slate-950 border border-cyan-500/40 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-400 text-base">
-                <button @click="calcNth()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20">
-                    <i data-lucide="zap" class="w-4 h-4"></i> 計算する
-                </button>
+            <!-- ボタンをなくして @input でリアルタイム連動！ -->
+            <div class="w-full">
+                <input type="number" x-model.number="nthIndex" @input="calcNth()" min="1" max="10000" class="w-full bg-slate-950 border border-cyan-500/40 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-400 text-base shadow-inner">
             </div>
 
             <!-- 結果表示 -->
