@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ja" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>素数ロケーター | Prime Locator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: { 700: '#1e293b', 800: '#0f172a', 900: '#020617' }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-white antialiased overflow-x-hidden pb-10">
+
+    <!-- ヘッダーエリア -->
+    <header class="relative z-10 w-full px-4 py-3 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 bg-slate-900/80 backdrop-blur-md border-b border-cyan-500/20">
+        <div class="flex items-center justify-between w-full sm:w-auto">
+            <a href="../../index.html" class="inline-flex items-center gap-1 text-xs text-cyan-400 hover:underline font-semibold bg-cyan-950/50 border border-cyan-500/30 px-2.5 py-1.5 rounded-lg transition">
+                <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> ポータルに戻る
+            </a>
+        </div>
+        <div class="flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-400 flex items-center justify-center shrink-0">
+                <span class="font-bold text-cyan-400 text-base">🔍</span>
+            </div>
+            <div>
+                <h1 class="font-extrabold text-sm sm:text-lg tracking-wider text-white">素数ロケーター</h1>
+                <p class="text-[10px] sm:text-xs text-cyan-400/70">周辺の素数 ＆ N番目の素数探索</p>
+            </div>
+        </div>
+        <div class="hidden sm:block w-24"></div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main x-data="primeLocator()" class="max-w-4xl w-full mx-auto px-4 py-6 flex-grow flex flex-col gap-6">
+
+        <!-- タブ切り替え -->
+        <div class="flex rounded-xl bg-slate-900 p-1 border border-cyan-500/30">
+            <button @click="activeTab = 'nearest'" :class="activeTab === 'nearest' ? 'bg-cyan-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'" class="flex-1 py-2 text-xs sm:text-sm rounded-lg transition text-center flex items-center justify-center gap-1.5">
+                <i data-lucide="compass" class="w-4 h-4"></i> 近くの素数を探す
+            </button>
+            <button @click="activeTab = 'nth'" :class="activeTab === 'nth' ? 'bg-cyan-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'" class="flex-1 py-2 text-xs sm:text-sm rounded-lg transition text-center flex items-center justify-center gap-1.5">
+                <i data-lucide="list-ordered" class="w-4 h-4"></i> N番目の素数
+            </button>
+        </div>
+
+        <!-- ① 近くの素数モード -->
+        <div x-show="activeTab === 'nearest'" class="flex flex-col gap-5 bg-slate-900/60 border border-cyan-500/20 rounded-2xl p-5 sm:p-6 backdrop-blur">
+            <div>
+                <h2 class="text-base sm:text-lg font-bold text-cyan-300 mb-1">指定した数の周辺の素数</h2>
+                <p class="text-xs text-slate-400">数値を入力すると、その数より小さい最大の素数と、大きい最小の素数を探すべ！</p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+                <input type="number" x-model.number="targetNumber" min="2" max="10000000" class="flex-grow bg-slate-950 border border-cyan-500/40 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-400 text-base">
+                <button @click="calcNearest()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20">
+                    <i data-lucide="search" class="w-4 h-4"></i> 探す
+                </button>
+            </div>
+
+            <!-- 結果表示 -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
+                <div class="bg-slate-950/80 border border-cyan-500/20 rounded-xl p-4 text-center">
+                    <div class="text-xs text-slate-400 mb-1">直前の素数 (<span x-text="targetNumber"></span>以下)</div>
+                    <div class="text-lg sm:text-xl font-bold text-cyan-400" x-text="prevPrime !== null ? prevPrime : 'なし'">-</div>
+                </div>
+                <div class="bg-slate-950/80 border border-cyan-500/30 rounded-xl p-4 text-center relative overflow-hidden ring-1 ring-cyan-500/50">
+                    <div class="absolute top-0 right-0 bg-cyan-500 text-slate-950 text-[9px] font-bold px-2 py-0.5 rounded-bl">判定</div>
+                    <div class="text-xs text-slate-400 mb-1">入力した数</div>
+                    <div class="text-lg sm:text-xl font-bold" :class="isTargetPrime ? 'text-emerald-400' : 'text-amber-400'" x-text="isTargetPrime ? '素数です！✨' : '素数じゃないよ'">-</div>
+                </div>
+                <div class="bg-slate-950/80 border border-cyan-500/20 rounded-xl p-4 text-center">
+                    <div class="text-xs text-slate-400 mb-1">直後の素数 (<span x-text="targetNumber"></span>以上)</div>
+                    <div class="text-lg sm:text-xl font-bold text-cyan-400" x-text="nextPrime !== null ? nextPrime : 'なし'">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ② N番目の素数モード -->
+        <div x-show="activeTab === 'nth'" class="flex flex-col gap-5 bg-slate-900/60 border border-cyan-500/20 rounded-2xl p-5 sm:p-6 backdrop-blur" style="display: none;">
+            <div>
+                <h2 class="text-base sm:text-lg font-bold text-cyan-300 mb-1">N番目の素数を取得</h2>
+                <p class="text-xs text-slate-400">「100番目の素数」や「1000番目の素数」を一瞬で計算するべ！（最大10,000番目まで）</p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+                <input type="number" x-model.number="nthIndex" min="1" max="10000" class="flex-grow bg-slate-950 border border-cyan-500/40 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-cyan-400 text-base">
+                <button @click="calcNth()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20">
+                    <i data-lucide="zap" class="w-4 h-4"></i> 計算する
+                </button>
+            </div>
+
+            <!-- 結果表示 -->
+            <div class="bg-slate-950/80 border border-cyan-500/30 rounded-xl p-6 text-center mt-2">
+                <div class="text-xs text-slate-400 mb-1"><span x-text="nthIndex"></span>番目の素数</div>
+                <div class="text-2xl sm:text-4xl font-extrabold text-cyan-400 tracking-wider my-2" x-text="nthResult !== null ? nthResult : '数値を入力してね'">-</div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- フッター -->
+    <footer class="text-center text-xs text-slate-500 py-6 border-t border-slate-900 mt-10">
+        素数ロケーター / ネオン数学ポータル
+    </footer>
+
+    <!-- ロジックスクリプト -->
+    <script>
+        function isPrimeNum(num) {
+            if (num < 2) return false;
+            if (num <= 3) return true;
+            if (num % 2 === 0 || num % 3 === 0) return false;
+            for (let i = 5; i * i <= num; i += 6) {
+                if (num % i === 0 || num % (i + 2) === 0) return false;
+            }
+            return true;
+        }
+
+        function primeLocator() {
+            return {
+                activeTab: 'nearest',
+                targetNumber: 97,
+                prevPrime: null,
+                nextPrime: null,
+                isTargetPrime: false,
+                nthIndex: 10,
+                nthResult: null,
+
+                init() {
+                    this.calcNearest();
+                    this.calcNth();
+                    setTimeout(() => {
+                        if (window.lucide) window.lucide.createIcons();
+                    }, 50);
+                },
+
+                calcNearest() {
+                    let n = parseInt(this.targetNumber);
+                    if (isNaN(n) || n < 2) {
+                        this.prevPrime = 'なし（2以上を入力してね）';
+                        this.nextPrime = '2';
+                        this.isTargetPrime = false;
+                        return;
+                    }
+
+                    this.isTargetPrime = isPrimeNum(n);
+
+                    // 直前の素数を探す
+                    let p = n - 1;
+                    while (p >= 2 && !isPrimeNum(p)) {
+                        p--;
+                    }
+                    this.prevPrime = p >= 2 ? p : 'なし';
+
+                    // 直後の素数を探す
+                    let nx = n + 1;
+                    while (!isPrimeNum(nx) && nx < 20000000) {
+                        nx++;
+                    }
+                    this.nextPrime = nx;
+                },
+
+                calcNth() {
+                    let idx = parseInt(this.nthIndex);
+                    if (isNaN(idx) || idx < 1) {
+                        this.nthResult = '1以上の数を入れてね';
+                        return;
+                    }
+                    if (idx > 10000) {
+                        this.nthResult = '10,000以下にしてけろ！';
+                        return;
+                    }
+
+                    let count = 0;
+                    let current = 1;
+                    while (count < idx) {
+                        current++;
+                        if (isPrimeNum(current)) {
+                            count++;
+                        }
+                    }
+                    this.nthResult = current;
+                }
+            }
+        }
+
+        // アイコン初期化
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
+            }
+        });
+    </script>
+</body>
+</html>
