@@ -28,7 +28,8 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between antialiased p-4 sm:p-8">
 
-  <div class="max-w-4xl w-full mx-auto flex-grow flex flex-col justify-center">
+  <div class="max-w-5xl w-full mx-auto flex-grow flex flex-col justify-center">
+    <!-- ヘッダー -->
     <header class="text-center mb-10">
       <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/25 text-indigo-300 text-xs font-medium mb-3">
         <i data-lucide="compass" class="w-3.5 h-3.5 text-indigo-400"></i>
@@ -43,54 +44,78 @@
     </header>
 
     <!-- ツール一覧グリッド -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       
-      <!-- 平方根シミュレーターへのリンク -->
-      <a href="./shape/square/squareroot/sqrt-1.html" class="bg-slate-900 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-6 transition-all shadow-lg hover:shadow-indigo-500/10 group block">
-        <div class="flex items-center gap-3 mb-3">
-          <div class="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition shrink-0">
-            <i data-lucide="square-radical" class="w-5 h-5"></i>
+      <!-- バビロニア法 平方根シミュレーター -->
+      <a href="./shape/square/squareroot/sqrt-1.html" class="bg-slate-900 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-5 transition-all shadow-lg hover:shadow-indigo-500/10 group block flex flex-col justify-between">
+        <div>
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition shrink-0">
+              <i data-lucide="square-radical" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h2 class="text-sm font-bold text-white group-hover:text-indigo-400 transition">バビロニア法 平方根</h2>
+              <span class="text-[10px] text-slate-400 font-mono">squareroot/</span>
+            </div>
           </div>
-          <div>
-            <h2 class="text-base font-bold text-white group-hover:text-indigo-400 transition">バビロニア法 平方根</h2>
-            <span class="text-[11px] text-slate-400 font-mono">squareroot/</span>
-          </div>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            「割る・足す・2で割る」の3ステップで真の平方根に吸い寄せられる様子を可視化！
+          </p>
         </div>
-        <p class="text-xs text-slate-400 leading-relaxed">
-          「割る・足す・2で割る」の3ステップで真の平方根に吸い寄せられる様子を可視化！
-        </p>
       </a>
 
-      <!-- ネオンパイ・オデッセイへのリンク -->
-      <a href="./shape/circ/pi/neon_pi_odyssey.html" class="bg-slate-900 border border-slate-800 hover:border-cyan-500/50 rounded-2xl p-6 transition-all shadow-lg hover:shadow-cyan-500/10 group block">
-        <div class="flex items-center gap-3 mb-3">
-          <div class="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition shrink-0">
-            <i data-lucide="sparkles" class="w-5 h-5"></i>
+      <!-- 三平方の定理ビジュアライザー (NEW!) -->
+      <a href="./shape/triangle/pythagoras.html" class="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 rounded-2xl p-5 transition-all shadow-lg hover:shadow-emerald-500/10 group block flex flex-col justify-between">
+        <div>
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition shrink-0">
+              <i data-lucide="triangle" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h2 class="text-sm font-bold text-white group-hover:text-emerald-400 transition">三平方の定理</h2>
+              <span class="text-[10px] text-slate-400 font-mono">shape/triangle/</span>
+            </div>
           </div>
-          <div>
-            <h2 class="text-base font-bold text-white group-hover:text-cyan-400 transition">ネオンパイ・オデッセイ</h2>
-            <span class="text-[11px] text-slate-400 font-mono">shape/circ/pi/</span>
-          </div>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            直角三角形の斜辺を直感で計算！きれいな根号や小数表示も切り替え可能。
+          </p>
         </div>
-        <p class="text-xs text-slate-400 leading-relaxed">
-          円周率やパイにまつわるパズルのシミュレーターツール！
-        </p>
       </a>
 
-      <!-- 新しい進数変換ツールへのリンク（パス修正済み！） -->
-      <a href="./number/base/base.html" class="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 rounded-2xl p-6 transition-all shadow-lg hover:shadow-emerald-500/10 group block">
-        <div class="flex items-center gap-3 mb-3">
-          <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition shrink-0">
-            <i data-lucide="binary" class="w-5 h-5"></i>
+      <!-- ネオンパイ・オデッセイ -->
+      <a href="./shape/circ/pi/neon_pi_odyssey.html" class="bg-slate-900 border border-slate-800 hover:border-cyan-500/50 rounded-2xl p-5 transition-all shadow-lg hover:shadow-cyan-500/10 group block flex flex-col justify-between">
+        <div>
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition shrink-0">
+              <i data-lucide="sparkles" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h2 class="text-sm font-bold text-white group-hover:text-cyan-400 transition">ネオンパイ・オデッセイ</h2>
+              <span class="text-[10px] text-slate-400 font-mono">shape/circ/pi/</span>
+            </div>
           </div>
-          <div>
-            <h2 class="text-base font-bold text-white group-hover:text-emerald-400 transition">進数変換コンバーター</h2>
-            <span class="text-[11px] text-slate-400 font-mono">number/base/</span>
-          </div>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            円周率やパイにまつわるパズルのシミュレーターツール！
+          </p>
         </div>
-        <p class="text-xs text-slate-400 leading-relaxed">
-          2〜36進数を自由に行き来できる便利な数値変換ツール！
-        </p>
+      </a>
+
+      <!-- 進数変換コンバーター -->
+      <a href="./number/base/base.html" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-5 transition-all shadow-lg hover:shadow-amber-500/10 group block flex flex-col justify-between">
+        <div>
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:scale-110 transition shrink-0">
+              <i data-lucide="binary" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h2 class="text-sm font-bold text-white group-hover:text-amber-400 transition">進数変換コンバーター</h2>
+              <span class="text-[10px] text-slate-400 font-mono">number/base/</span>
+            </div>
+          </div>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            2〜36進数を自由に行き来できる便利な数値変換ツール！
+          </p>
+        </div>
       </a>
 
     </div>
