@@ -1,0 +1,674 @@
+
+<!DOCTYPE html>
+<html lang="ja" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>バビロニア法 平方根シミュレーター</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.22s ease-out forwards',
+            'pop-in': 'popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0', transform: 'translateY(6px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            popIn: {
+              '0%': { opacity: '0', transform: 'scale(0.96) translateY(10px)' },
+              '100%': { opacity: '1', transform: 'scale(1) translateY(0)' },
+            }
+          }
+        }
+      }
+    };
+
+    // Alpine.js 読み込み前に必ず関数をグローバル定義して競合を防ぐ
+    window.babylonianApp = function() {
+      return {
+        targetS: 9,
+        initialGuess: 2.95,
+        startIndex: 0,
+        maxSteps: 15,
+        steps: [],
+        popover: {
+          open: false,
+          step: null,
+          highlight: 'average'
+        },
+
+        // 初期化処理
+        init() {
+          this.computeSteps();
+          this.renderIcons();
+        },
+
+        // Lucideアイコンの再描画ヘルパー
+        renderIcons() {
+          this.$nextTick(() => {
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+              window.lucide.createIcons();
+            }
+          });
+        },
+
+        // 真の平方根（電卓値）
+        get trueSqrt() {
+          const s = Number(this.targetS);
+          if (!Number.isFinite(s) || s <= 0) return null;
+          return Math.sqrt(s);
+        },
+
+        get trueSqrtDisplay() {
+          const val = this.trueSqrt;
+          if (val === null) return '正の数を入力';
+          return Number.isInteger(val) ? val.toString() : val.toFixed(7) + '...';
+        },
+
+        // 現在の3ステップスライス（startIndex 〜 startIndex + 2）
+        get visibleSteps() {
+          return this.steps.slice(this.startIndex, this.startIndex + 3);
+        },
+
+        // プリセット切り替え
+        applyPreset(s, x0) {
+          this.targetS = s;
+          this.initialGuess = x0;
+          this.startIndex = 0;
+          this.computeSteps();
+          this.renderIcons();
+        },
+
+        // 入力変更時のライブ再計算
+        onInputChange() {
+          this.startIndex = 0;
+          this.computeSteps();
+          this.renderIcons();
+        },
+
+        // バビロニア法で最大15ステップ事前計算
+        computeSteps() {
+          const s = Number(this.targetS);
+          const x0 = Number(this.initialGuess);
+
+          if (!Number.isFinite(s) || s <= 0 || !Number.isFinite(x0) || x0 <= 0) {
+            this.steps = [];
+            return;
+          }
+
+          const trueVal = Math.sqrt(s);
+          const generated = [];
+          let current = x0;
+
+          for (let k = 1; k <= this.maxSteps; k++) {
+            const partner = s / current;
+            const sum = current + partner;
+            const next = sum / 2;
+            const squared = next * next;
+            const error = Math.abs(squared - s);
+            const valDiff = Math.abs(next - trueVal);
+            const relErr = valDiff / trueVal;
+            const convergencePct = Math.max(4, Math.min(100, Math.round(100 / (1 + relErr * 12))));
+
+            generated.push({
+              stepNum: k,
+              prev: current,
+              partner: partner,
+              sum: sum,
+              next: next,
+              squared: squared,
+              error: error,
+              convergencePct: convergencePct,
+              isConverged: valDiff < 1e-7
+            });
+
+            current = next;
+          }
+
+          this.steps = generated;
+        },
+
+        // + ボタン：1ステップ進める（先頭が1つ消え、次の1つが増える）
+        nextStep() {
+          if (this.startIndex + 3 < this.steps.length) {
+            this.startIndex++;
+            this.renderIcons();
+          }
+        },
+
+        // - ボタン：1ステップ戻る
+        prevStep() {
+          if (this.startIndex > 0) {
+            this.startIndex--;
+            this.renderIcons();
+          }
+        },
+
+        // インジケーターからジャンプ
+        jumpTo(idx) {
+          const maxStart = Math.max(0, this.steps.length - 3);
+          this.startIndex = Math.min(Math.max(0, idx), maxStart);
+          this.renderIcons();
+        },
+
+        // 計算順序ポップオーバーを開く
+        openPopover(step, highlightType) {
+          this.popover.step = step;
+          this.popover.highlight = highlightType || 'average';
+          this.popover.open = true;
+          this.renderIcons();
+        },
+
+        // ポップオーバーを閉じる
+        closePopover() {
+          this.popover.open = false;
+        },
+
+        // 数値フォーマット（見やすく丸める）
+        formatNum(num) {
+          if (num === null || num === undefined || !Number.isFinite(num)) return '---';
+          if (Number.isInteger(num)) return num.toString();
+          const rounded = Number(num.toFixed(6));
+          return rounded.toString();
+        },
+
+        // 2乗誤差フォーマット
+        formatError(err) {
+          if (err === null || err === undefined || !Number.isFinite(err)) return '---';
+          if (err < 1e-8) return '0 (完全一致)';
+          if (err < 0.0001) return err.toExponential(2);
+          return Number(err.toFixed(5)).toString();
+        }
+      };
+    };
+  </script>
+
+  <!-- Alpine.js CDN（関数定義のあとに読み込む） -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+
+  <style>
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #020617;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 9999px;
+    }
+    [x-cloak] {
+      display: none !important;
+    }
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white antialiased overflow-x-hidden pb-36 md:pb-10">
+
+  <!-- メインコンテナ -->
+  <div x-data="babylonianApp()" class="max-w-6xl w-full mx-auto px-3.5 sm:px-6 py-5 sm:py-9 flex-grow flex flex-col">
+
+    <!-- ヘッダー -->
+    <header class="text-center mb-5 sm:mb-8">
+      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/25 text-indigo-300 text-xs font-medium mb-2.5">
+        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-indigo-400"></i>
+        <span>バビロニア法（平均法）可視化</span>
+      </div>
+      <h1 class="text-xl sm:text-4xl font-bold tracking-tight text-white mb-1.5">
+        平方根 <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-cyan-400 to-emerald-400 font-mono">√S</span> 収束シミュレーター
+      </h1>
+      <p class="text-slate-400 text-xs sm:text-base max-w-2xl mx-auto leading-relaxed">
+        「割る・足す・2で割る」の3ステップで真の平方根に吸い寄せられる様子を体験しよう。
+      </p>
+    </header>
+
+    <!-- 入力＆プリセットパネル -->
+    <section class="bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl p-4 sm:p-6 mb-5 shadow-xl">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 items-end">
+
+        <!-- 数値入力 2カラム -->
+        <div class="grid grid-cols-2 gap-3 md:col-span-6">
+          <!-- 元の数 S -->
+          <div>
+            <label class="block text-[11px] sm:text-xs font-semibold text-slate-400 mb-1.5 flex items-center gap-1">
+              <i data-lucide="box" class="w-3.5 h-3.5 text-cyan-400 shrink-0"></i>
+              <span>元の数 (S)</span>
+            </label>
+            <div class="relative flex items-center">
+              <span class="absolute left-3 text-cyan-400 font-mono font-bold text-base sm:text-lg">√</span>
+              <input
+                type="number"
+                inputmode="decimal"
+                step="any"
+                min="0.0001"
+                x-model.number="targetS"
+                @input="onInputChange()"
+                class="w-full min-h-[46px] bg-slate-950 border border-slate-700 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 rounded-xl py-2 pl-8 pr-3 font-mono text-base sm:text-lg font-bold text-white tabular-nums transition-all outline-none"
+                placeholder="9"
+              >
+            </div>
+          </div>
+
+          <!-- 最初の予想 x0 -->
+          <div>
+            <label class="block text-[11px] sm:text-xs font-semibold text-slate-400 mb-1.5 flex items-center gap-1">
+              <i data-lucide="compass" class="w-3.5 h-3.5 text-indigo-400 shrink-0"></i>
+              <span>最初の予想 (x₀)</span>
+            </label>
+            <div class="relative flex items-center">
+              <span class="absolute left-3 text-indigo-400 font-mono text-xs sm:text-sm font-bold">x₀=</span>
+              <input
+                type="number"
+                inputmode="decimal"
+                step="any"
+                min="0.0001"
+                x-model.number="initialGuess"
+                @input="onInputChange()"
+                class="w-full min-h-[46px] bg-slate-950 border border-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 rounded-xl py-2 pl-11 pr-3 font-mono text-base sm:text-lg font-bold text-white tabular-nums transition-all outline-none"
+                placeholder="2.95"
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- 電卓値＆プリセット -->
+        <div class="md:col-span-6 flex flex-col justify-between space-y-2.5">
+          <div class="flex items-center justify-between bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5">
+            <span class="text-xs text-slate-400 flex items-center gap-1.5">
+              <i data-lucide="target" class="w-3.5 h-3.5 text-emerald-400"></i>
+              <span>真の答え (電卓値):</span>
+            </span>
+            <span class="font-mono font-bold text-emerald-400 text-sm sm:text-base tabular-nums" x-text="trueSqrtDisplay"></span>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2">
+            <button @click="applyPreset(2, 1.5)" class="min-h-[38px] text-xs bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-200 py-1.5 px-2 rounded-lg border border-slate-700 transition font-mono cursor-pointer">
+              √2 (予想 1.5)
+            </button>
+            <button @click="applyPreset(4, 6)" class="min-h-[38px] text-xs bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-200 py-1.5 px-2 rounded-lg border border-slate-700 transition font-mono cursor-pointer">
+              √4 (予想 6)
+            </button>
+            <button @click="applyPreset(9, 2.95)" class="min-h-[38px] text-xs bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-200 py-1.5 px-2 rounded-lg border border-slate-700 transition font-mono cursor-pointer">
+              √9 (予想 2.95)
+            </button>
+            <button @click="applyPreset(2, 10)" class="min-h-[38px] text-xs bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-200 py-1.5 px-2 rounded-lg border border-slate-700 transition font-mono cursor-pointer">
+              √2 (予想 10)
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ステップ表示エリア -->
+    <section class="flex-grow flex flex-col justify-center">
+
+      <!-- ステップ状態バー ＋ スマホ用上部スライドコントロール -->
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-3.5 px-0.5">
+        <div class="flex items-center gap-1.5 text-xs sm:text-sm text-slate-300 font-medium">
+          <span class="inline-flex items-center justify-center w-6 h-6 rounded-md bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 font-mono text-xs font-bold tabular-nums" x-text="startIndex + 1"></span>
+          <span class="text-slate-500">〜</span>
+          <span class="inline-flex items-center justify-center w-6 h-6 rounded-md bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 font-mono text-xs font-bold tabular-nums" x-text="startIndex + 3"></span>
+          <span>ステップを表示中</span>
+        </div>
+
+        <!-- スマホ用インライン操作ボタン（カード直上でも即タップ可能） -->
+        <div class="flex md:hidden items-center gap-1.5">
+          <button
+            @click="prevStep()"
+            :disabled="startIndex === 0"
+            :class="startIndex === 0 ? 'opacity-35 cursor-not-allowed bg-slate-900 border-slate-800 text-slate-600' : 'bg-slate-800 active:bg-slate-700 text-white border-slate-700 cursor-pointer'"
+            class="min-h-[34px] px-2.5 rounded-lg border flex items-center gap-1 text-xs font-semibold transition"
+            aria-label="1ステップ戻る"
+          >
+            <i data-lucide="minus" class="w-3.5 h-3.5"></i>
+            <span>戻る</span>
+          </button>
+          <button
+            @click="nextStep()"
+            :disabled="startIndex + 3 >= steps.length"
+            :class="startIndex + 3 >= steps.length ? 'opacity-35 cursor-not-allowed bg-slate-900 border-slate-800 text-slate-600' : 'bg-indigo-600 active:bg-indigo-500 text-white border-indigo-400/50 cursor-pointer'"
+            class="min-h-[34px] px-2.5 rounded-lg border flex items-center gap-1 text-xs font-semibold transition"
+            aria-label="1ステップ進める"
+          >
+            <span>次へ</span>
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+
+        <div class="hidden sm:flex items-center gap-1.5 text-xs text-cyan-300 bg-cyan-950/60 border border-cyan-800/50 px-3 py-1 rounded-full">
+          <i data-lucide="hand" class="w-3.5 h-3.5 shrink-0"></i>
+          <span>数字タップで<strong>計算順序</strong>を表示</span>
+        </div>
+      </div>
+
+      <!-- 警告メッセージ（不正な数値入力時） -->
+      <div x-show="steps.length === 0" x-cloak class="bg-amber-950/40 border border-amber-500/30 rounded-2xl p-6 text-center text-amber-200 text-sm my-4">
+        「元の数 (S)」と「最初の予想 (x₀)」に 0 より大きい数字を入力してください。
+      </div>
+
+      <!-- メインスライダー本体（PC：左右ボタン＋3カード / スマホ：3カード縦積み） -->
+      <div x-show="steps.length > 0" class="flex items-stretch gap-3 md:gap-4">
+
+        <!-- PC用 左：マイナスボタン -->
+        <button
+          @click="prevStep()"
+          :disabled="startIndex === 0"
+          :class="startIndex === 0 ? 'opacity-30 cursor-not-allowed bg-slate-900 border-slate-800 text-slate-600' : 'bg-slate-900 hover:bg-indigo-600/20 hover:border-indigo-500/50 text-slate-200 hover:text-indigo-300 border-slate-700 shadow-lg cursor-pointer active:scale-95'"
+          class="hidden md:flex w-14 rounded-2xl border flex-col items-center justify-center gap-1 transition-all shrink-0 select-none group"
+          title="1ステップ戻る"
+        >
+          <i data-lucide="minus" class="w-6 h-6 transition-transform group-hover:scale-110"></i>
+          <span class="text-[10px] font-mono uppercase tracking-tighter">Prev</span>
+        </button>
+
+        <!-- 常に3ステップ表示グリッド -->
+        <div class="w-full flex-grow grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-4">
+          <template x-for="step in visibleSteps" :key="step.stepNum">
+            <div
+              class="animate-fade-in bg-slate-900/95 border border-slate-800 hover:border-slate-700 rounded-2xl p-4 sm:p-5 flex flex-col justify-between shadow-lg relative overflow-hidden transition-all"
+              :class="step.isConverged ? 'ring-1 ring-emerald-500/40 border-emerald-500/30' : ''"
+            >
+              <!-- 収束完了バッジ -->
+              <div x-show="step.isConverged" class="absolute top-0 right-0 bg-emerald-500/20 text-emerald-300 border-b border-l border-emerald-500/30 text-[10px] font-bold px-2.5 py-1 rounded-bl-xl flex items-center gap-1">
+                <i data-lucide="check-circle-2" class="w-3 h-3"></i>
+                <span>ほぼ収束！</span>
+              </div>
+
+              <div>
+                <!-- STEPバッジ -->
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center gap-2">
+                    <span class="px-2.5 py-1 rounded-lg bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 font-mono text-xs font-bold">
+                      STEP <span x-text="step.stepNum"></span>
+                    </span>
+                    <span class="text-xs text-slate-400 font-mono" x-text="'x' + (step.stepNum - 1) + ' → x' + step.stepNum"></span>
+                  </div>
+                </div>
+
+                <!-- スタート予想値 (prev) -->
+                <div class="mb-2.5 bg-slate-950/80 rounded-xl p-2.5 sm:p-3 border border-slate-800/80">
+                  <div class="flex justify-between items-center text-[11px] sm:text-xs text-slate-400 mb-0.5">
+                    <span>スタートの予想値 (<span class="font-mono" x-text="'x' + (step.stepNum - 1)"></span>)</span>
+                    <span class="text-[10px] text-slate-500">タップで順序</span>
+                  </div>
+                  <button
+                    @click="openPopover(step, 'divide')"
+                    class="w-full min-h-[34px] text-left font-mono text-base sm:text-lg font-semibold text-slate-200 hover:text-indigo-400 tabular-nums transition flex items-center justify-between group cursor-pointer"
+                  >
+                    <span x-text="formatNum(step.prev)"></span>
+                    <i data-lucide="help-circle" class="w-4 h-4 text-slate-500 group-hover:text-indigo-400 transition shrink-0"></i>
+                  </button>
+                </div>
+
+                <!-- 計算プロセス -->
+                <div class="space-y-2 my-2.5">
+                  <!-- ① 割る -->
+                  <button
+                    @click="openPopover(step, 'divide')"
+                    class="w-full min-h-[44px] flex items-center justify-between text-xs bg-slate-950/50 hover:bg-cyan-950/40 active:bg-cyan-950/60 border border-slate-800/80 hover:border-cyan-500/40 rounded-xl px-3 py-2 transition cursor-pointer group"
+                  >
+                    <div class="flex items-center gap-2 text-slate-300">
+                      <span class="w-5 h-5 rounded-full bg-cyan-500/15 text-cyan-400 flex items-center justify-center font-bold text-[11px] shrink-0">1</span>
+                      <span>割る (<span class="font-mono text-slate-400" x-text="targetS + ' ÷ x' + (step.stepNum - 1)"></span>)</span>
+                    </div>
+                    <div class="font-mono font-bold text-sm text-cyan-400 group-hover:text-cyan-300 tabular-nums flex items-center gap-1">
+                      <span class="underline decoration-cyan-500/40 underline-offset-4" x-text="formatNum(step.partner)"></span>
+                      <i data-lucide="info" class="w-3.5 h-3.5 shrink-0"></i>
+                    </div>
+                  </button>
+
+                  <!-- ② 足す -->
+                  <button
+                    @click="openPopover(step, 'add')"
+                    class="w-full min-h-[44px] flex items-center justify-between text-xs bg-slate-950/50 hover:bg-amber-950/40 active:bg-amber-950/60 border border-slate-800/80 hover:border-amber-500/40 rounded-xl px-3 py-2 transition cursor-pointer group"
+                  >
+                    <div class="flex items-center gap-2 text-slate-300">
+                      <span class="w-5 h-5 rounded-full bg-amber-500/15 text-amber-400 flex items-center justify-center font-bold text-[11px] shrink-0">2</span>
+                      <span>足す (予想 + 相棒)</span>
+                    </div>
+                    <div class="font-mono font-bold text-sm text-amber-400 group-hover:text-amber-300 tabular-nums flex items-center gap-1">
+                      <span class="underline decoration-amber-500/40 underline-offset-4" x-text="formatNum(step.sum)"></span>
+                      <i data-lucide="info" class="w-3.5 h-3.5 shrink-0"></i>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              <!-- ③ 2で割る（結果） -->
+              <div class="mt-2 pt-2.5 border-t border-slate-800">
+                <div class="flex items-center justify-between text-[11px] sm:text-xs text-slate-400 mb-1.5">
+                  <span class="flex items-center gap-1.5 font-medium text-emerald-400">
+                    <span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-[11px] shrink-0">3</span>
+                    <span>2で割る (次の値 <span class="font-mono" x-text="'x' + step.stepNum"></span>)</span>
+                  </span>
+                  <span class="font-mono text-[11px] tabular-nums" :class="step.error < 0.001 ? 'text-emerald-400' : 'text-slate-400'" x-text="'2乗誤差: ' + formatError(step.error)"></span>
+                </div>
+
+                <button
+                  @click="openPopover(step, 'average')"
+                  class="w-full min-h-[48px] bg-gradient-to-r from-emerald-500/15 to-cyan-500/15 hover:from-emerald-500/25 hover:to-cyan-500/25 active:scale-[0.99] border border-emerald-500/30 hover:border-emerald-400 rounded-xl px-3.5 py-2.5 flex items-center justify-between transition group cursor-pointer"
+                >
+                  <span class="font-mono text-lg sm:text-2xl font-bold text-white tracking-tight tabular-nums" x-text="formatNum(step.next)"></span>
+                  <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-300 bg-emerald-950/90 px-2.5 py-1 rounded-lg border border-emerald-500/30 shrink-0">
+                    <span>順序を見る</span>
+                    <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                  </span>
+                </button>
+
+                <!-- 収束ゲージ -->
+                <div class="mt-2.5">
+                  <div class="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800/80">
+                    <div
+                      class="h-full bg-gradient-to-r from-indigo-500 via-cyan-400 to-emerald-400 transition-all duration-300 rounded-full"
+                      :style="'width: ' + step.convergencePct + '%'"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- PC用 右：プラスボタン -->
+        <button
+          @click="nextStep()"
+          :disabled="startIndex + 3 >= steps.length"
+          :class="startIndex + 3 >= steps.length ? 'opacity-30 cursor-not-allowed bg-slate-900 border-slate-800 text-slate-600' : 'bg-indigo-600 hover:bg-indigo-500 border-indigo-400/50 text-white shadow-lg shadow-indigo-950/50 cursor-pointer active:scale-95'"
+          class="hidden md:flex w-14 rounded-2xl border flex-col items-center justify-center gap-1 transition-all shrink-0 select-none group"
+          title="1ステップ進める"
+        >
+          <i data-lucide="plus" class="w-6 h-6 transition-transform group-hover:rotate-90"></i>
+          <span class="text-[10px] font-mono uppercase tracking-tighter">Next</span>
+        </button>
+
+      </div>
+
+      <!-- PC用 ステップ進行ドット -->
+      <div x-show="steps.length > 0" class="hidden md:flex mt-6 items-center justify-center gap-2">
+        <template x-for="i in steps.length" :key="i">
+          <button
+            @click="jumpTo(i - 1)"
+            class="h-2 rounded-full transition-all cursor-pointer"
+            :class="(i - 1 >= startIndex && i - 1 < startIndex + 3) ? 'w-8 bg-indigo-500' : 'w-2 bg-slate-800 hover:bg-slate-600'"
+            :title="'STEP ' + i"
+          ></button>
+        </template>
+      </div>
+    </section>
+
+    <!-- スマホ専用：中央のシステムボタンを避ける左右分離型フローティングバー（bottom-16） -->
+    <nav x-show="steps.length > 0" class="md:hidden fixed bottom-16 left-3 right-3 z-40 pointer-events-none">
+      <div class="max-w-lg mx-auto flex items-center justify-between">
+        <!-- 左：マイナスボタン -->
+        <button
+          @click="prevStep()"
+          :disabled="startIndex === 0"
+          :class="startIndex === 0 ? 'opacity-40 cursor-not-allowed bg-slate-900/90 border-slate-800 text-slate-600' : 'bg-slate-900/95 active:bg-slate-800 text-white border-slate-700 shadow-xl cursor-pointer'"
+          class="pointer-events-auto min-h-[46px] px-4 rounded-2xl border backdrop-blur-md flex items-center gap-1.5 font-semibold text-xs transition select-none"
+        >
+          <i data-lucide="minus" class="w-4 h-4"></i>
+          <span>1つ戻る</span>
+        </button>
+
+        <!-- 右：プラスボタン -->
+        <button
+          @click="nextStep()"
+          :disabled="startIndex + 3 >= steps.length"
+          :class="startIndex + 3 >= steps.length ? 'opacity-40 cursor-not-allowed bg-slate-900/90 border-slate-800 text-slate-600' : 'bg-indigo-600/95 active:bg-indigo-500 border-indigo-400/50 text-white shadow-xl shadow-indigo-950/70 cursor-pointer'"
+          class="pointer-events-auto min-h-[46px] px-4 rounded-2xl border backdrop-blur-md flex items-center gap-1.5 font-semibold text-xs transition select-none"
+        >
+          <span>次へ進める</span>
+          <i data-lucide="plus" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </nav>
+
+    <!-- フッター -->
+    <footer class="mt-8 pt-4 border-t border-slate-900 text-center text-xs text-slate-500">
+      <p>バビロニア法（ヘロンの方法）：古代メソポタミアから伝わる高速な平方根の近似アルゴリズム</p>
+    </footer>
+
+    <!-- ========================================================= -->
+    <!-- 計算順序ポップオーバー（スマホ：ボトムシート / PC：中央モーダル） -->
+    <!-- ========================================================= -->
+    <div
+      x-show="popover.open"
+      x-cloak
+      class="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-slate-950/80 backdrop-blur-sm"
+      @click.self="closePopover()"
+      @keydown.escape.window="closePopover()"
+    >
+      <div
+        x-show="popover.open"
+        class="animate-pop-in bg-slate-900 border-t sm:border border-slate-700 rounded-t-3xl sm:rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl relative overflow-hidden max-h-[88vh] overflow-y-auto"
+      >
+        <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-cyan-400 via-amber-400 to-emerald-400"></div>
+
+        <!-- モーダルヘッダー -->
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0">
+              <i data-lucide="calculator" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h3 class="text-base sm:text-lg font-bold text-white leading-tight">
+                STEP <span x-text="popover.step?.stepNum"></span> の計算順序ガイド
+              </h3>
+              <p class="text-[11px] sm:text-xs text-slate-400">カッコの中を先に足してから、最後に2で割る！</p>
+            </div>
+          </div>
+          <button
+            @click="closePopover()"
+            class="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition cursor-pointer shrink-0"
+          >
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <!-- 全体式 -->
+        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3 mb-4 text-center">
+          <div class="text-[10px] sm:text-[11px] text-slate-400 mb-1">このステップの全体式</div>
+          <div class="font-mono text-xs sm:text-base text-slate-200 overflow-x-auto whitespace-nowrap tabular-nums">
+            ( <span class="text-indigo-400 font-bold" x-text="formatNum(popover.step?.prev)"></span> +
+            <span class="text-cyan-400 font-bold" x-text="formatNum(popover.step?.partner)"></span> ) ÷ 2 =
+            <span class="text-emerald-400 font-bold" x-text="formatNum(popover.step?.next)"></span>
+          </div>
+        </div>
+
+        <!-- 3段階カード -->
+        <div class="space-y-2.5" x-if="popover.step">
+          <!-- ① 割る -->
+          <div
+            class="p-3 sm:p-3.5 rounded-2xl border transition-all"
+            :class="popover.highlight === 'divide' ? 'bg-cyan-950/40 border-cyan-500 ring-1 ring-cyan-500/50' : 'bg-slate-950/60 border-slate-800'"
+          >
+            <div class="flex items-center justify-between mb-1">
+              <span class="inline-flex items-center gap-1.5 text-xs font-bold text-cyan-400">
+                <span class="w-5 h-5 rounded-full bg-cyan-500/20 flex items-center justify-center shrink-0">①</span>
+                <span>まず「元の数 S」を予想値で割る！</span>
+              </span>
+              <span x-show="popover.highlight === 'divide'" class="text-[10px] bg-cyan-500 text-slate-950 font-bold px-2 py-0.5 rounded-full shrink-0">選択中</span>
+            </div>
+            <p class="text-[11px] sm:text-xs text-slate-400 mb-2">反対側のピンチヒッター（相棒の数字）を作ります。</p>
+            <div class="font-mono text-xs sm:text-base bg-slate-900 px-3 py-2 rounded-xl border border-slate-800/80 flex items-center justify-between tabular-nums">
+              <span class="text-slate-300" x-text="targetS + ' ÷ ' + formatNum(popover.step?.prev)"></span>
+              <span class="text-cyan-400 font-bold" x-text="'= ' + formatNum(popover.step?.partner)"></span>
+            </div>
+          </div>
+
+          <!-- ② 足す -->
+          <div
+            class="p-3 sm:p-3.5 rounded-2xl border transition-all"
+            :class="popover.highlight === 'add' ? 'bg-amber-950/40 border-amber-500 ring-1 ring-amber-500/50' : 'bg-slate-950/60 border-slate-800'"
+          >
+            <div class="flex items-center justify-between mb-1">
+              <span class="inline-flex items-center gap-1.5 text-xs font-bold text-amber-400">
+                <span class="w-5 h-5 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0">②</span>
+                <span>カッコの中の「足し算」を先に終わらせる！</span>
+              </span>
+              <span x-show="popover.highlight === 'add'" class="text-[10px] bg-amber-500 text-slate-950 font-bold px-2 py-0.5 rounded-full shrink-0">選択中</span>
+            </div>
+            <p class="text-[11px] sm:text-xs text-slate-400 mb-2">「スタートの予想値」と「①の相棒」を合体させます。</p>
+            <div class="font-mono text-xs sm:text-base bg-slate-900 px-3 py-2 rounded-xl border border-slate-800/80 flex items-center justify-between tabular-nums">
+              <span class="text-slate-300" x-text="formatNum(popover.step?.prev) + ' + ' + formatNum(popover.step?.partner)"></span>
+              <span class="text-amber-400 font-bold" x-text="'= ' + formatNum(popover.step?.sum)"></span>
+            </div>
+          </div>
+
+          <!-- ③ 2で割る -->
+          <div
+            class="p-3 sm:p-3.5 rounded-2xl border transition-all"
+            :class="popover.highlight === 'average' ? 'bg-emerald-950/40 border-emerald-500 ring-1 ring-emerald-500/50' : 'bg-slate-950/60 border-slate-800'"
+          >
+            <div class="flex items-center justify-between mb-1">
+              <span class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400">
+                <span class="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">③</span>
+                <span>最後に「2で割って」ど真ん中（平均）をとる！</span>
+              </span>
+              <span x-show="popover.highlight === 'average'" class="text-[10px] bg-emerald-500 text-slate-950 font-bold px-2 py-0.5 rounded-full shrink-0">選択中</span>
+            </div>
+            <p class="text-[11px] sm:text-xs text-slate-400 mb-2">②の合計を半分こにして、真の答えに近づけます！</p>
+            <div class="font-mono text-xs sm:text-base bg-slate-900 px-3 py-2 rounded-xl border border-slate-800/80 flex items-center justify-between tabular-nums">
+              <span class="text-slate-300" x-text="formatNum(popover.step?.sum) + ' ÷ 2'"></span>
+              <span class="text-emerald-400 font-bold text-base sm:text-lg" x-text="'= ' + formatNum(popover.step?.next)"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 閉じるボタン -->
+        <div class="mt-5 mb-2 sm:mb-0">
+          <button
+            @click="closePopover()"
+            class="w-full min-h-[46px] py-3 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-semibold text-sm transition cursor-pointer"
+          >
+            なるほど！閉じる
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
