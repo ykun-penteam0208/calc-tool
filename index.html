@@ -4,15 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>計算ツール ポータル</title>
-
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
-
-  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
-
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -25,7 +19,6 @@
         }
       }
     };
-
     window.addEventListener('DOMContentLoaded', () => {
       if (window.lucide && typeof window.lucide.createIcons === 'function') {
         window.lucide.createIcons();
@@ -36,7 +29,6 @@
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between antialiased p-4 sm:p-8">
 
   <div class="max-w-4xl w-full mx-auto flex-grow flex flex-col justify-center">
-    <!-- ヘッダー -->
     <header class="text-center mb-10">
       <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/25 text-indigo-300 text-xs font-medium mb-3">
         <i data-lucide="compass" class="w-3.5 h-3.5 text-indigo-400"></i>
@@ -51,7 +43,7 @@
     </header>
 
     <!-- ツール一覧グリッド -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
       
       <!-- 平方根シミュレーターへのリンク -->
       <a href="./shape/square/squareroot/sqrt-1.html" class="bg-slate-900 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-6 transition-all shadow-lg hover:shadow-indigo-500/10 group block">
@@ -60,16 +52,16 @@
             <i data-lucide="square-radical" class="w-5 h-5"></i>
           </div>
           <div>
-            <h2 class="text-base font-bold text-white group-hover:text-indigo-400 transition">バビロニア法 平方根シミュレーター</h2>
-            <span class="text-[11px] text-slate-400 font-mono">shape/square/squareroot/</span>
+            <h2 class="text-base font-bold text-white group-hover:text-indigo-400 transition">バビロニア法 平方根</h2>
+            <span class="text-[11px] text-slate-400 font-mono">squareroot/</span>
           </div>
         </div>
         <p class="text-xs text-slate-400 leading-relaxed">
-          「割る・足す・2で割る」の3ステップで真の平方根に吸い寄せられる様子を可視化するツール！
+          「割る・足す・2で割る」の3ステップで真の平方根に吸い寄せられる様子を可視化！
         </p>
       </a>
 
-      <!-- ネオンパイ・オデッセイへのリンク（パスを新しい場所に修正！） -->
+      <!-- ネオンパイ・オデッセイへのリンク -->
       <a href="./shape/circ/pi/neon_pi_odyssey.html" class="bg-slate-900 border border-slate-800 hover:border-cyan-500/50 rounded-2xl p-6 transition-all shadow-lg hover:shadow-cyan-500/10 group block">
         <div class="flex items-center gap-3 mb-3">
           <div class="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition shrink-0">
@@ -85,10 +77,25 @@
         </p>
       </a>
 
+      <!-- 新しい進数変換ツールへのリンク（パス修正済み！） -->
+      <a href="./number/base/base.html" class="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 rounded-2xl p-6 transition-all shadow-lg hover:shadow-emerald-500/10 group block">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition shrink-0">
+            <i data-lucide="binary" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h2 class="text-base font-bold text-white group-hover:text-emerald-400 transition">進数変換コンバーター</h2>
+            <span class="text-[11px] text-slate-400 font-mono">number/base/</span>
+          </div>
+        </div>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          2〜36進数を自由に行き来できる便利な数値変換ツール！
+        </p>
+      </a>
+
     </div>
   </div>
 
-  <!-- フッター -->
   <footer class="mt-12 text-center text-xs text-slate-500 border-t border-slate-900 pt-4">
     <p>GitHub Pages Calculation Tools Portal</p>
   </footer>
