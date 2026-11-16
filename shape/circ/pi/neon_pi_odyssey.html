@@ -87,30 +87,41 @@
     <div id="canvas-container"></div>
 
     <!-- Header / Navbar -->
-    <header class="relative z-10 w-full px-6 py-4 flex justify-between items-center glass-panel border-b border-cyan-500/20">
-        <div class="mb-3">
-      <a href="../../../index.html" class="text-xs text-cyan-400 hover:underline flex items-center gap-1 font-semibold">
-        <i data-lucide="arrow-left" class="w-4 h-4"></i> ポータルに戻る
+    <!-- ヘッダーエリア -->
+  <header class="relative z-10 w-full px-4 py-4 flex flex-col gap-3 border-b border-cyan-500/20 bg-slate-950/80 backdrop-blur-md">
+    
+    <!-- ポータルに戻るボタン（スマホでもスッキリ収まる専用枠！） -->
+    <div>
+      <a href="../../../index.html" class="inline-flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 font-semibold bg-cyan-950/50 border border-cyan-500/30 px-3 py-1.5 rounded-lg transition shadow-sm">
+        <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> ポータルに戻る
       </a>
     </div>
-        <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-400 flex items-center justify-center glow-cyan">
-                <span class="font-orbitron font-bold text-cyan-400 text-lg">π</span>
-            </div>
-            <div>
-                <h1 class="font-orbitron font-extrabold text-xl tracking-wider text-white glow-text-cyan">NEON PI ODYSSEY</h1>
-                <p class="text-xs text-cyan-400/70 tracking-widest uppercase">3D Quantum Typing Simulation</p>
-            </div>
+
+    <!-- タイトルと右側の機能ボタン（SFX / Rules） -->
+    <div class="flex items-center justify-between w-full">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shrink-0 font-bold">
+          π
         </div>
-        <div class="flex items-center space-x-4">
-            <button id="audio-toggle" onclick="toggleAudio()" class="px-3 py-2 rounded-lg bg-cyber-700/80 hover:bg-cyber-600 border border-cyan-500/30 text-cyan-300 text-sm font-orbitron transition flex items-center space-x-2">
-                <span id="audio-icon">🔊</span> <span class="hidden sm:inline">SFX: ON</span>
-            </button>
-            <button onclick="openRulesModal()" class="px-3 py-2 rounded-lg bg-cyber-700/80 hover:bg-cyber-600 border border-purple-500/30 text-purple-300 text-sm font-orbitron transition">
-                ℹ️ Rules
-            </button>
+        <div>
+          <h1 class="text-sm sm:text-lg font-extrabold text-white tracking-wider">ネオン・パイ・オデッセイ</h1>
+          <p class="text-[10px] sm:text-xs text-cyan-400/80">3D量子タイピングシミュレーション</p>
         </div>
-    </header>
+      </div>
+      
+      <!-- 右側のSFXやRulesボタンのグループ（元のコードのボタンをそのままここに置く） -->
+      <div class="flex items-center gap-2">
+        <button @click="toggleAudio()" class="flex items-center gap-1.5 text-xs bg-slate-900 border border-cyan-500/30 hover:border-cyan-500 text-cyan-300 px-3 py-1.5 rounded-lg transition">
+          <i :data-lucide="audioEnabled ? 'volume-2' : 'volume-x'" class="w-3.5 h-3.5"></i>
+          <span x-text="audioEnabled ? 'SFX: ON' : 'SFX: OFF'"></span>
+        </button>
+        <button @click="rulesOpen = true" class="flex items-center gap-1.5 text-xs bg-slate-900 border border-cyan-500/30 hover:border-cyan-500 text-cyan-300 px-3 py-1.5 rounded-lg transition">
+          <i data-lucide="info" class="w-3.5 h-3.5"></i> Rules
+        </button>
+      </div>
+    </div>
+
+  </header>
 
     <!-- Main Content Area -->
     <main class="relative z-10 flex-1 flex flex-col items-center justify-center p-4 sm:p-6 max-w-5xl mx-auto w-full my-auto">
