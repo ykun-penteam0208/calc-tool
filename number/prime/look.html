@@ -64,9 +64,8 @@
                 <p class="text-xs text-slate-400">数値を入力すると、入力した瞬間にその数より小さい最大の素数と大きい最小の素数を探すべ！✨</p>
             </div>
 
-            <!-- ボタンをなくして @input でリアルタイム連動！ -->
             <div class="w-full">
-                <input type="number" x-model.number="targetNumber" @input="calcNearest()" min="2" max="10000000" class="w-full bg-slate-950 border border-cyan-500/40 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-400 text-base shadow-inner">
+                <input type="number" x-model.number="targetNumber" @input="calcNearest()" min="2" class="w-full bg-slate-950 border border-cyan-500/40 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-400 text-base shadow-inner">
             </div>
 
             <!-- 結果表示 -->
@@ -91,12 +90,11 @@
         <div x-show="activeTab === 'nth'" class="flex flex-col gap-5 bg-slate-900/60 border border-cyan-500/20 rounded-2xl p-5 sm:p-6 backdrop-blur" style="display: none;">
             <div>
                 <h2 class="text-base sm:text-lg font-bold text-cyan-300 mb-1">N番目の素数を取得</h2>
-                <p class="text-xs text-slate-400">数値を打ち込むだけで「〇番目の素数」を一瞬で自動計算するべ！（最大10,000番目まで）🚀</p>
+                <p class="text-xs text-slate-400">制限なし！好きな番目の素数を計算するべ！（※大きすぎる数字を入れるとフリーズするから気をつけるんだぞ！⚠️）</p>
             </div>
 
-            <!-- ボタンをなくして @input でリアルタイム連動！ -->
             <div class="w-full">
-                <input type="number" x-model.number="nthIndex" @input="calcNth()" min="1" max="10000" class="w-full bg-slate-950 border border-cyan-500/40 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-400 text-base shadow-inner">
+                <input type="number" x-model.number="nthIndex" @input="calcNth()" min="1" class="w-full bg-slate-950 border border-cyan-500/40 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-400 text-base shadow-inner">
             </div>
 
             <!-- 結果表示 -->
@@ -154,14 +152,12 @@
 
                     this.isTargetPrime = isPrimeNum(n);
 
-                    // 直前の素数を探す
                     let p = n - 1;
                     while (p >= 2 && !isPrimeNum(p)) {
                         p--;
                     }
                     this.prevPrime = p >= 2 ? p : 'なし';
 
-                    // 直後の素数を探す
                     let nx = n + 1;
                     while (!isPrimeNum(nx) && nx < 20000000) {
                         nx++;
@@ -173,10 +169,6 @@
                     let idx = parseInt(this.nthIndex);
                     if (isNaN(idx) || idx < 1) {
                         this.nthResult = '1以上の数を入れてね';
-                        return;
-                    }
-                    if (idx > 10000) {
-                        this.nthResult = '10,000以下にしてけろ！';
                         return;
                     }
 
@@ -193,7 +185,6 @@
             }
         }
 
-        // アイコン初期化
         window.addEventListener('DOMContentLoaded', () => {
             if (window.lucide && typeof window.lucide.createIcons === 'function') {
                 window.lucide.createIcons();
