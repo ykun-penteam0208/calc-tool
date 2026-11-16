@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ja" class="dark">
 <head>
@@ -47,7 +46,6 @@
         targetS: 9,
         initialGuess: 2.95,
         startIndex: 0,
-        maxSteps: 15,
         steps: [],
         popover: {
           open: false,
@@ -57,7 +55,7 @@
 
         // 初期化処理
         init() {
-          this.computeSteps();
+          this.resetSteps();
           this.renderIcons();
         },
 
@@ -93,19 +91,43 @@
           this.targetS = s;
           this.initialGuess = x0;
           this.startIndex = 0;
-          this.computeSteps();
+          this.resetSteps();
           this.renderIcons();
         },
 
         // 入力変更時のライブ再計算
         onInputChange() {
           this.startIndex = 0;
-          this.computeSteps();
+          this.resetSteps();
           this.renderIcons();
         },
 
-        // バビロニア法で最大15ステップ事前計算
-        computeSteps() {
+        // 1ステップ分の計算ロジック（無限生成用）
+        createStepData(stepNum, prevVal, s, trueVal) {
+          const partner = s / prevVal;
+          const sum = prevVal + partner;
+          const next = sum / 2;
+          const squared = next * next;
+          const error = Math.abs(squared - s);
+          const valDiff = Math.abs(next - trueVal);
+          const relErr = valDiff / trueVal;
+          const convergencePct = Math.max(4, Math.min(100, Math.round(100 / (1 + relErr * 12))));
+
+          return {
+            stepNum: stepNum,
+            prev: prevVal,
+            partner: partner,
+            sum: sum,
+            next: next,
+            squared: squared,
+            error: error,
+            convergencePct: convergencePct,
+            isConverged: valDiff < 1e-7
+          };
+        },
+
+        // 最初の3ステップを生成
+        resetSteps() {
           const s = Number(this.targetS);
           const x0 = Number(this.initialGuess);
 
@@ -118,40 +140,34 @@
           const generated = [];
           let current = x0;
 
-          for (let k = 1; k <= this.maxSteps; k++) {
-            const partner = s / current;
-            const sum = current + partner;
-            const next = sum / 2;
-            const squared = next * next;
-            const error = Math.abs(squared - s);
-            const valDiff = Math.abs(next - trueVal);
-            const relErr = valDiff / trueVal;
-            const convergencePct = Math.max(4, Math.min(100, Math.round(100 / (1 + relErr * 12))));
-
-            generated.push({
-              stepNum: k,
-              prev: current,
-              partner: partner,
-              sum: sum,
-              next: next,
-              squared: squared,
-              error: error,
-              convergencePct: convergencePct,
-              isConverged: valDiff < 1e-7
-            });
-
-            current = next;
+          for (let k = 1; k <= 3; k++) {
+            const stepObj = this.createStepData(k, current, s, trueVal);
+            generated.push(stepObj);
+            current = stepObj.next;
           }
 
           this.steps = generated;
         },
 
-        // + ボタン：1ステップ進める（先頭が1つ消え、次の1つが増える）
+        // + ボタン：1ステップ進める（足りなければ無限に新しく計算して追加！）
         nextStep() {
-          if (this.startIndex + 3 < this.steps.length) {
-            this.startIndex++;
-            this.renderIcons();
+          const s = Number(this.targetS);
+          if (!Number.isFinite(s) || s <= 0 || this.steps.length === 0) return;
+
+          const nextStart = this.startIndex + 1;
+          while (this.steps.length < nextStart + 3) {
+            const lastStep = this.steps[this.steps.length - 1];
+            const newStep = this.createStepData(
+              lastStep.stepNum + 1,
+              lastStep.next,
+              s,
+              Math.sqrt(s)
+            );
+            this.steps.push(newStep);
           }
+
+          this.startIndex = nextStart;
+          this.renderIcons();
         },
 
         // - ボタン：1ステップ戻る
@@ -309,11 +325,11 @@
             <button @click="applyPreset(4, 6)" class="min-h-[38px] text-xs bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-200 py-1.5 px-2 rounded-lg border border-slate-700 transition font-mono cursor-pointer">
               √4 (予想 6)
             </button>
-            <button @click="applyPreset(9, 2.95)" class="min-h-[38px] text-xs bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-200 py-1.5 px-2 rounded-lg border border-slate-700 transition font-mono cursor-pointer">
-              √9 (予想 2.95)
+            <button @click="applyPreset(10000, 1)" class="min-h-[38px] text-xs bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-200 py-1.5 px-2 rounded-lg border border-slate-700 transition font-mono cursor-pointer">
+              √10000 (予想 1)
             </button>
-            <button @click="applyPreset(2, 10)" class="min-h-[38px] text-xs bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-200 py-1.5 px-2 rounded-lg border border-slate-700 transition font-mono cursor-pointer">
-              √2 (予想 10)
+            <button @click="applyPreset(2, 100000)" class="min-h-[38px] text-xs bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-200 py-1.5 px-2 rounded-lg border border-slate-700 transition font-mono cursor-pointer">
+              √2 (予想 10万)
             </button>
           </div>
         </div>
@@ -347,9 +363,7 @@
           </button>
           <button
             @click="nextStep()"
-            :disabled="startIndex + 3 >= steps.length"
-            :class="startIndex + 3 >= steps.length ? 'opacity-35 cursor-not-allowed bg-slate-900 border-slate-800 text-slate-600' : 'bg-indigo-600 active:bg-indigo-500 text-white border-indigo-400/50 cursor-pointer'"
-            class="min-h-[34px] px-2.5 rounded-lg border flex items-center gap-1 text-xs font-semibold transition"
+            class="min-h-[34px] px-2.5 rounded-lg border bg-indigo-600 active:bg-indigo-500 text-white border-indigo-400/50 cursor-pointer flex items-center gap-1 text-xs font-semibold transition"
             aria-label="1ステップ進める"
           >
             <span>次へ</span>
@@ -494,10 +508,8 @@
         <!-- PC用 右：プラスボタン -->
         <button
           @click="nextStep()"
-          :disabled="startIndex + 3 >= steps.length"
-          :class="startIndex + 3 >= steps.length ? 'opacity-30 cursor-not-allowed bg-slate-900 border-slate-800 text-slate-600' : 'bg-indigo-600 hover:bg-indigo-500 border-indigo-400/50 text-white shadow-lg shadow-indigo-950/50 cursor-pointer active:scale-95'"
-          class="hidden md:flex w-14 rounded-2xl border flex-col items-center justify-center gap-1 transition-all shrink-0 select-none group"
-          title="1ステップ進める"
+          class="hidden md:flex w-14 rounded-2xl border bg-indigo-600 hover:bg-indigo-500 border-indigo-400/50 text-white shadow-lg shadow-indigo-950/50 cursor-pointer active:scale-95 flex-col items-center justify-center gap-1 transition-all shrink-0 select-none group"
+          title="1ステップ進める（無限に進めます）"
         >
           <i data-lucide="plus" class="w-6 h-6 transition-transform group-hover:rotate-90"></i>
           <span class="text-[10px] font-mono uppercase tracking-tighter">Next</span>
@@ -505,14 +517,14 @@
 
       </div>
 
-      <!-- PC用 ステップ進行ドット -->
+      <!-- PC用 ステップ進行ドット（最新15ステップ分を表示） -->
       <div x-show="steps.length > 0" class="hidden md:flex mt-6 items-center justify-center gap-2">
-        <template x-for="i in steps.length" :key="i">
+        <template x-for="step in steps.slice(-15)" :key="step.stepNum">
           <button
-            @click="jumpTo(i - 1)"
+            @click="jumpTo(step.stepNum - 1)"
             class="h-2 rounded-full transition-all cursor-pointer"
-            :class="(i - 1 >= startIndex && i - 1 < startIndex + 3) ? 'w-8 bg-indigo-500' : 'w-2 bg-slate-800 hover:bg-slate-600'"
-            :title="'STEP ' + i"
+            :class="(step.stepNum - 1 >= startIndex && step.stepNum - 1 < startIndex + 3) ? 'w-8 bg-indigo-500' : 'w-2 bg-slate-800 hover:bg-slate-600'"
+            :title="'STEP ' + step.stepNum"
           ></button>
         </template>
       </div>
@@ -535,9 +547,7 @@
         <!-- 右：プラスボタン -->
         <button
           @click="nextStep()"
-          :disabled="startIndex + 3 >= steps.length"
-          :class="startIndex + 3 >= steps.length ? 'opacity-40 cursor-not-allowed bg-slate-900/90 border-slate-800 text-slate-600' : 'bg-indigo-600/95 active:bg-indigo-500 border-indigo-400/50 text-white shadow-xl shadow-indigo-950/70 cursor-pointer'"
-          class="pointer-events-auto min-h-[46px] px-4 rounded-2xl border backdrop-blur-md flex items-center gap-1.5 font-semibold text-xs transition select-none"
+          class="pointer-events-auto min-h-[46px] px-4 rounded-2xl border backdrop-blur-md bg-indigo-600/95 active:bg-indigo-500 border-indigo-400/50 text-white shadow-xl shadow-indigo-950/70 cursor-pointer flex items-center gap-1.5 font-semibold text-xs transition select-none"
         >
           <span>次へ進める</span>
           <i data-lucide="plus" class="w-4 h-4"></i>
