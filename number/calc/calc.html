@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ja" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>全部入り多機能計算機 - 津軽弁電卓</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Math.js を使って複雑な数式や変数計算をバッチリこなす！ -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    };
+    window.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        window.lucide.createIcons();
+      }
+    });
+  </script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between antialiased p-4 sm:p-8">
+
+  <div class="max-w-2xl w-full mx-auto flex-grow flex flex-col justify-center">
+    
+    <!-- ヘッダー -->
+    <header class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-3">
+        <a href="../../index.html" class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 hover:border-indigo-500/50 flex items-center justify-center text-slate-400 hover:text-white transition shadow-lg">
+          <i data-lucide="arrow-left" class="w-5 h-5"></i>
+        </a>
+        <div>
+          <h1 class="text-xl font-bold text-white flex items-center gap-2">
+            全部入り多機能計算機 🧮✨
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">津軽弁</span>
+          </h1>
+          <p class="text-xs text-slate-400">squareroot, variables (x, y, a, b, c), pi, and more!</p>
+        </div>
+      </div>
+    </header>
+
+    <!-- 計算機メインカード -->
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-6">
+      
+      <!-- ディスプレイ画面 -->
+      <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 text-right space-y-2 shadow-inner">
+        <div id="expression" class="text-xs text-slate-400 font-mono min-h-[1.2rem] overflow-x-auto whitespace-nowrap"></div>
+        <div id="display" class="text-3xl sm:text-4xl font-bold font-mono text-white tracking-wider overflow-x-auto whitespace-nowrap">0</div>
+      </div>
+
+      <!-- 変数メモリ（x, y, a, b, c）の値設定エリア -->
+      <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4">
+        <div class="text-xs font-bold text-indigo-400 mb-2 flex items-center gap-1.5">
+          <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
+          <span>変数メモリ設定 (x, y, a, b, c)</span>
+        </div>
+        <div class="grid grid-cols-5 gap-2">
+          <div>
+            <label class="text-[10px] text-slate-400 block mb-1">x</label>
+            <input type="number" id="var-x" value="2" oninput="updateVars()" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-2 py-1 text-center text-sm font-mono text-white focus:border-indigo-500 outline-none">
+          </div>
+          <div>
+            <label class="text-[10px] text-slate-400 block mb-1">y</label>
+            <input type="number" id="var-y" value="3" oninput="updateVars()" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-2 py-1 text-center text-sm font-mono text-white focus:border-indigo-500 outline-none">
+          </div>
+          <div>
+            <label class="text-[10px] text-slate-400 block mb-1">a</label>
+            <input type="number" id="var-a" value="1" oninput="updateVars()" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-2 py-1 text-center text-sm font-mono text-white focus:border-indigo-500 outline-none">
+          </div>
+          <div>
+            <label class="text-[10px] text-slate-400 block mb-1">b</label>
+            <input type="number" id="var-b" value="4" oninput="updateVars()" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-2 py-1 text-center text-sm font-mono text-white focus:border-indigo-500 outline-none">
+          </div>
+          <div>
+            <label class="text-[10px] text-slate-400 block mb-1">c</label>
+            <input type="number" id="var-c" value="5" oninput="updateVars()" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-2 py-1 text-center text-sm font-mono text-white focus:border-indigo-500 outline-none">
+          </div>
+        </div>
+      </div>
+
+      <!-- ボタンパッド -->
+      <div class="grid grid-cols-5 gap-2">
+        <!-- 1行目：特殊・定数 -->
+        <button onclick="clearAll()" class="bg-rose-500/20 border border-rose-500/30 hover:bg-rose-500/30 text-rose-300 font-bold py-3 rounded-xl transition text-sm">AC</button>
+        <button onclick="appendValue('sqrt(')" class="bg-indigo-500/20 border border-indigo-500/30 hover:bg-indigo-500/30 text-indigo-300 font-bold py-3 rounded-xl transition text-sm font-mono">√</button>
+        <button onclick="appendValue('pi')" class="bg-indigo-500/20 border border-indigo-500/30 hover:bg-indigo-500/30 text-indigo-300 font-bold py-3 rounded-xl transition text-sm font-mono">π</button>
+        <button onclick="appendValue('^')" class="bg-indigo-500/20 border border-indigo-500/30 hover:bg-indigo-500/30 text-indigo-300 font-bold py-3 rounded-xl transition text-sm font-mono">x^y</button>
+        <button onclick="appendValue('/')" class="bg-slate-800 hover:bg-slate-700 text-indigo-400 font-bold py-3 rounded-xl transition text-lg">÷</button>
+
+        <!-- 変数ボタン行 -->
+        <button onclick="appendValue('x')" class="bg-slate-800/80 border border-slate-700 hover:bg-slate-700 text-emerald-400 font-bold py-3 rounded-xl transition font-mono">x</button>
+        <button onclick="appendValue('y')" class="bg-slate-800/80 border border-slate-700 hover:bg-slate-700 text-emerald-400 font-bold py-3 rounded-xl transition font-mono">y</button>
+        <button onclick="appendValue('a')" class="bg-slate-800/80 border border-slate-700 hover:bg-slate-700 text-emerald-400 font-bold py-3 rounded-xl transition font-mono">a</button>
+        <button onclick="appendValue('b')" class="bg-slate-800/80 border border-slate-700 hover:bg-slate-700 text-emerald-400 font-bold py-3 rounded-xl transition font-mono">b</button>
+        <button onclick="appendValue('c')" class="bg-slate-800/80 border border-slate-700 hover:bg-slate-700 text-emerald-400 font-bold py-3 rounded-xl transition font-mono">c</button>
+
+        <!-- 数字 & 演算子 -->
+        <button onclick="appendValue('7')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl transition text-lg">7</button>
+        <button onclick="appendValue('8')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl transition text-lg">8</button>
+        <button onclick="appendValue('9')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl transition text-lg">9</button>
+        <button onclick="appendValue('(')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 rounded-xl transition text-lg">(</button>
+        <button onclick="appendValue('*')" class="bg-slate-800 hover:bg-slate-700 text-indigo-400 font-bold py-3 rounded-xl transition text-lg">×</button>
+
+        <button onclick="appendValue('4')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl transition text-lg">4</button>
+        <button onclick="appendValue('5')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl transition text-lg">5</button>
+        <button onclick="appendValue('6')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl transition text-lg">6</button>
+        <button onclick="appendValue(')')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 rounded-xl transition text-lg">)</button>
+        <button onclick="appendValue('-')" class="bg-slate-800 hover:bg-slate-700 text-indigo-400 font-bold py-3 rounded-xl transition text-lg">-</button>
+
+        <button onclick="appendValue('1')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl transition text-lg">1</button>
+        <button onclick="appendValue('2')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl transition text-lg">2</button>
+        <button onclick="appendValue('3')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl transition text-lg">3</button>
+        <button onclick="appendValue('0')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl transition text-lg">0</button>
+        <button onclick="appendValue('+')" class="bg-slate-800 hover:bg-slate-700 text-indigo-400 font-bold py-3 rounded-xl transition text-lg">+</button>
+
+        <button onclick="appendValue('.')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl transition text-lg">.</button>
+        <button onclick="deleteLast()" class="bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold py-3 rounded-xl transition text-sm flex items-center justify-center"><i data-lucide="delete" class="w-4 h-4"></i></button>
+        <button onclick="calculateResult()" class="col-span-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition text-lg shadow-lg shadow-indigo-600/30">＝ 計算する</button>
+      </div>
+
+    </div>
+
+    <!-- 津軽弁解説メッセージ -->
+    <div class="mt-6 bg-slate-900/60 border border-slate-800 rounded-2xl p-4 text-xs text-slate-400 text-center">
+      💡 変数（x, y, a, b, c）の値は上のメモリで自由に変えられるはんで、例えば <code class="text-indigo-300 font-mono">sqrt(x^2 + y^2)</code> みたいな計算も一発だべさ！🍎
+    </div>
+  </div>
+
+  <footer class="mt-8 text-center text-xs text-slate-500 border-t border-slate-900 pt-4">
+    <p>Advanced Calculator with Math.js</p>
+  </footer>
+
+  <script>
+    let currentExpression = "";
+
+    function appendValue(val) {
+      currentExpression += val;
+      document.getElementById('expression').innerText = currentExpression;
+    }
+
+    function clearAll() {
+      currentExpression = "";
+      document.getElementById('expression').innerText = "";
+      document.getElementById('display').innerText = "0";
+    }
+
+    function deleteLast() {
+      currentExpression = currentExpression.slice(0, -1);
+      document.getElementById('expression').innerText = currentExpression;
+    }
+
+    function updateVars() {
+      // 変数が変更されたときの処理（必要に応じてリアルタイム再計算も可能）
+    }
+
+    function calculateResult() {
+      if (!currentExpression) return;
+      try {
+        // 変数メモリから値を取得
+        const scope = {
+          x: parseFloat(document.getElementById('var-x').value) || 0,
+          y: parseFloat(document.getElementById('var-y').value) || 0,
+          a: parseFloat(document.getElementById('var-a').value) || 0,
+          b: parseFloat(document.getElementById('var-b').value) || 0,
+          c: parseFloat(document.getElementById('var-c').value) || 0,
+          pi: Math.PI
+        };
+
+        // math.js で数式を評価
+        let result = math.evaluate(currentExpression, scope);
+        
+        // 小数点以下の調整（キレイに表示する）
+        if (typeof result === 'number' && !Number.isInteger(result)) {
+          result = Math.round(result * 100000000) / 100000000;
+        }
+
+        document.getElementById('display').innerText = result;
+      } catch (error) {
+        document.getElementById('display').innerText = "エラーだば！";
+      }
+    }
+  </script>
+
+</body>
+</html>
