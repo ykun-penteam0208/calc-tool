@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="ja" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>お買い物値段計算ツール | calc-tool</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & Noto Sans JP -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Inter"', '"Noto Sans JP"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* カスタムスクロールバーとスマホ操作最適化 */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #020617;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 9999px;
+    }
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+    /* タップ時のハイライト消去とスムーズな操作感 */
+    button, a, input, select {
+      -webkit-tap-highlight-color: transparent;
+    }
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+    /* iPhone等の下部セーフエリア対応 */
+    .pb-safe {
+      padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+    }
+    /* ポップオーバーアニメーション */
+    @keyframes popIn {
+      from {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.97);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    .animate-pop-in {
+      animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white antialiased">
+
+  <!-- 背景のほのかな装飾グロー -->
+  <div class="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+    <div class="absolute -top-24 -left-24 w-72 h-72 bg-indigo-600/15 rounded-full blur-3xl"></div>
+    <div class="absolute top-1/3 -right-24 w-80 h-80 bg-violet-600/10 rounded-full blur-3xl"></div>
+  </div>
+
+  <!-- トースト通知エリア（alert()の代わり） -->
+  <div id="toast-container" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 pointer-events-none w-full max-w-xs px-4"></div>
+
+  <!-- 確認モーダル（confirm()の代わり） -->
+  <div id="confirm-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
+    <div class="bg-slate-900/95 border border-slate-700/80 rounded-3xl max-w-sm w-full p-6 shadow-2xl animate-pop-in">
+      <div class="flex items-center gap-3 text-amber-400 mb-3">
+        <div class="w-11 h-11 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center shrink-0">
+          <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+        </div>
+        <h3 class="text-base font-extrabold text-white" id="confirm-title">ほんとに消してもいいが？</h3>
+      </div>
+      <p class="text-xs text-slate-300 leading-relaxed mb-6" id="confirm-message">
+        今入力してる商品ば全部消してしまうけど、本当に大丈夫だば？
+      </p>
+      <div class="grid grid-cols-2 gap-2.5">
+        <button id="confirm-cancel" class="min-h-[44px] px-4 py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition">
+          やっぱやめる
+        </button>
+        <button id="confirm-ok" class="min-h-[44px] px-4 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-extrabold shadow-lg shadow-rose-500/25 transition">
+          全部消すべ！
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ヘッダーナビゲーション -->
+  <header class="sticky top-0 z-40 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/70">
+    <div class="max-w-4xl mx-auto px-3.5 sm:px-6 h-16 flex items-center justify-between gap-2">
+      <!-- 左側：ポータル戻りボタン＆タイトル -->
+      <div class="flex items-center gap-2.5 min-w-0">
+        <!-- /number/calc/store.html からルートの index.html (/calc-tool/index.html) へ戻る -->
+        <a href="../../index.html" id="portal-back-link"
+           class="min-h-[40px] inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-indigo-500/50 text-xs font-bold text-slate-200 hover:text-indigo-400 transition group shrink-0">
+          <i data-lucide="arrow-left" class="w-4 h-4 group-hover:-translate-x-0.5 transition-transform"></i>
+          <span>ポータルさ戻る</span>
+        </a>
+
+        <div class="flex items-center gap-2 min-w-0">
+          <div class="hidden xs:flex w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500/25 to-violet-500/25 border border-indigo-500/30 items-center justify-center text-indigo-400 shrink-0">
+            <i data-lucide="shopping-bag" class="w-4 h-4"></i>
+          </div>
+          <div class="truncate">
+            <h1 class="text-sm sm:text-base font-black text-white tracking-tight truncate">
+              お買い物電卓だべさ 🍎
+            </h1>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右側：オプションポップオーバー起動ボタン -->
+      <div class="relative shrink-0">
+        <button id="toggle-options-btn" type="button" aria-expanded="false"
+                class="min-h-[42px] inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 hover:border-indigo-500/50 text-slate-100 text-xs font-bold shadow-lg transition active:scale-95">
+          <i data-lucide="sliders-horizontal" class="w-4 h-4 text-indigo-400"></i>
+          <span>オプション</span>
+          <span id="header-tax-badge" class="px-1.5 py-0.5 rounded-md bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 text-[10px] font-extrabold tabular-nums">
+            税8%
+          </span>
+        </button>
+
+        <!-- オプション ポップオーバー（初期状態は完全非表示 hidden） -->
+        <div id="options-popover"
+             class="hidden fixed sm:absolute inset-x-3 sm:inset-x-auto sm:right-0 top-[70px] sm:top-[52px] sm:w-[360px] z-50 bg-slate-900/95 backdrop-blur-2xl border border-slate-700/80 rounded-3xl p-5 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.85)] animate-pop-in">
+          <!-- ポップオーバーヘッダー -->
+          <div class="flex items-center justify-between pb-3.5 mb-4 border-b border-slate-800">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                <i data-lucide="settings-2" class="w-4 h-4"></i>
+              </div>
+              <div>
+                <h2 class="text-sm font-extrabold text-white">計算ルール設定 ⚙️</h2>
+                <p class="text-[10px] text-slate-400">全体の標準税率や計算方法ば決めるべ</p>
+              </div>
+            </div>
+            <button id="close-options-btn" type="button"
+                    class="w-9 h-9 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+          <div class="space-y-4">
+            <!-- 1. 標準税率（ひとつに集約！） -->
+            <div class="bg-slate-950/70 border border-slate-800 rounded-2xl p-3.5">
+              <div class="flex items-center justify-between mb-2.5">
+                <label for="standard-tax-input" class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                  <i data-lucide="percent" class="w-3.5 h-3.5 text-indigo-400"></i>
+                  標準税率（新規・基本）
+                </label>
+                <div class="flex items-center gap-1">
+                  <button type="button" data-tax-preset="8"
+                          class="tax-preset-btn px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition bg-indigo-600 text-white">
+                    8%
+                  </button>
+                  <button type="button" data-tax-preset="10"
+                          class="tax-preset-btn px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition bg-slate-800 text-slate-300 hover:bg-slate-700">
+                    10%
+                  </button>
+                  <button type="button" data-tax-preset="0"
+                          class="tax-preset-btn px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition bg-slate-800 text-slate-300 hover:bg-slate-700">
+                    0%
+                  </button>
+                </div>
+              </div>
+              <div class="relative flex items-center">
+                <input type="number" id="standard-tax-input" value="8" min="0" max="100" step="0.1" inputmode="decimal"
+                       class="w-full min-h-[42px] bg-slate-900 border border-slate-700 focus:border-indigo-500 rounded-xl pl-3.5 pr-9 text-sm font-black text-white text-right tabular-nums focus:outline-none" />
+                <span class="absolute right-3.5 text-xs font-bold text-slate-400 pointer-events-none">%</span>
+              </div>
+              <p class="text-[10px] text-slate-400 mt-1.5">※商品追加時の初期税率＆標準税率として使われるべ！</p>
+            </div>
+
+            <!-- 2. 値札の入力方式（税抜 / 税込） -->
+            <div class="bg-slate-950/70 border border-slate-800 rounded-2xl p-3.5">
+              <label class="block text-xs font-bold text-slate-200 mb-2 flex items-center gap-1.5">
+                <i data-lucide="tag" class="w-3.5 h-3.5 text-amber-400"></i>
+                値札の入力方式
+              </label>
+              <div class="grid grid-cols-2 gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800">
+                <button type="button" id="mode-tax-excl" data-mode="excl"
+                        class="price-mode-btn min-h-[38px] rounded-lg text-xs font-extrabold transition bg-indigo-600 text-white shadow">
+                  税抜価格で入力
+                </button>
+                <button type="button" id="mode-tax-incl" data-mode="incl"
+                        class="price-mode-btn min-h-[38px] rounded-lg text-xs font-extrabold transition text-slate-400 hover:text-white">
+                  税込価格で入力
+                </button>
+              </div>
+              <p class="text-[10px] text-slate-400 mt-1.5" id="price-mode-desc">値札の「本体価格」ば入れるとき用だば</p>
+            </div>
+
+            <!-- 3. 1円未満の端数計算 -->
+            <div class="bg-slate-950/70 border border-slate-800 rounded-2xl p-3.5">
+              <label for="rounding-select" class="block text-xs font-bold text-slate-200 mb-2 flex items-center gap-1.5">
+                <i data-lucide="calculator" class="w-3.5 h-3.5 text-emerald-400"></i>
+                1円未満の端数処理
+              </label>
+              <select id="rounding-select"
+                      class="w-full min-h-[42px] bg-slate-900 border border-slate-700 focus:border-indigo-500 rounded-xl px-3 text-xs font-bold text-white focus:outline-none">
+                <option value="floor" selected>切り捨て（スーパー標準だば）</option>
+                <option value="round">四捨五入</option>
+                <option value="ceil">切り上げ</option>
+              </select>
+            </div>
+
+            <!-- 完了ボタン -->
+            <button id="done-options-btn" type="button"
+                    class="w-full min-h-[44px] rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold shadow-lg shadow-indigo-500/25 transition">
+              これでOKだべ！✨
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ポップオーバー開いたときの背景クリック用バックドロップ -->
+  <div id="popover-backdrop" class="hidden fixed inset-0 z-30 bg-slate-950/50 backdrop-blur-[2px]"></div>
+
+  <!-- メインコンテンツ（スマホ下部固定バーに被らないよう下余白大きめ pb-36） -->
+  <main class="flex-1 max-w-4xl w-full mx-auto px-3.5 sm:px-6 pt-4 pb-40 space-y-5">
+
+    <!-- クイックツールバー（サンプル・全消し・メモコピー） -->
+    <div class="flex items-center justify-between gap-2 bg-slate-900/70 backdrop-blur-md border border-slate-800/80 rounded-2xl p-2.5">
+      <div class="flex items-center gap-1.5">
+        <button id="add-sample-btn" type="button"
+                class="min-h-[38px] inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700/70 text-slate-200 text-xs font-bold transition active:scale-95">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
+          <span>お試し例</span>
+        </button>
+        <button id="copy-receipt-btn" type="button"
+                class="min-h-[38px] inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700/70 text-slate-200 text-xs font-bold transition active:scale-95">
+          <i data-lucide="copy" class="w-3.5 h-3.5 text-indigo-400"></i>
+          <span>メモコピー</span>
+        </button>
+      </div>
+
+      <button id="clear-all-btn" type="button"
+              class="min-h-[38px] inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/25 text-rose-400 text-xs font-bold transition active:scale-95">
+        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+        <span>全部消す</span>
+      </button>
+    </div>
+
+    <!-- 商品カード一覧 -->
+    <section id="items-list" class="space-y-3.5">
+      <!-- JSで動的に商品カードを生成 -->
+    </section>
+
+    <!-- 空状態の案内 -->
+    <section id="empty-state" class="hidden bg-slate-900/50 border border-dashed border-slate-800 rounded-3xl p-8 sm:p-12 text-center">
+      <div class="w-16 h-16 rounded-3xl bg-slate-900 border border-slate-800 flex items-center justify-center text-indigo-400 mx-auto mb-4 shadow-inner">
+        <i data-lucide="shopping-cart" class="w-8 h-8"></i>
+      </div>
+      <h2 class="text-base font-extrabold text-white mb-1.5">カゴの中身、まだ空っぽだべさ！🛒</h2>
+      <p class="text-xs text-slate-400 leading-relaxed mb-6">
+        下の「＋ 商品ば追加」ボタン押して、<br>買ったものや半額シールの商品ば入れてけろ！🍎✨
+      </p>
+      <button id="empty-add-btn" type="button"
+              class="min-h-[46px] inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold shadow-lg shadow-indigo-500/25 transition active:scale-95">
+        <i data-lucide="plus" class="w-4 h-4"></i>
+        <span>最初の1個ば追加するべ</span>
+      </button>
+    </section>
+
+    <!-- 詳細内訳＆お釣り計算カード（スクロールで見れる詳細パネル） -->
+    <section class="bg-slate-900/80 backdrop-blur-md border border-slate-800/90 rounded-3xl p-4 sm:p-6 shadow-xl space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800/80">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+            <i data-lucide="receipt" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h2 class="text-sm font-extrabold text-white">お会計の詳しい内訳だべ 🧾</h2>
+            <p class="text-[11px] text-slate-400">消費税やお釣りもここで確認できるじゃ</p>
+          </div>
+        </div>
+        <span id="detail-count-badge" class="px-2.5 py-1 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-xs font-extrabold tabular-nums">
+          0点
+        </span>
+      </div>
+
+      <!-- 内訳リスト -->
+      <div class="space-y-2 text-xs">
+        <div class="flex justify-between items-center text-slate-300">
+          <span>定価の合計（割引前）</span>
+          <span id="summary-original" class="font-bold tabular-nums text-slate-200">0 円</span>
+        </div>
+        <div class="flex justify-between items-center text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-3 py-2">
+          <span class="font-bold flex items-center gap-1.5">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+            割引・半額でお得になった分！
+          </span>
+          <span id="summary-discount" class="font-extrabold tabular-nums">- 0 円</span>
+        </div>
+        <div class="flex justify-between items-center text-slate-400 pt-1">
+          <span>税抜合計（割引後）</span>
+          <span id="summary-subtotal-excl" class="tabular-nums text-slate-300">0 円</span>
+        </div>
+        <div class="flex justify-between items-center text-slate-400">
+          <span>消費税 合計</span>
+          <span id="summary-tax-total" class="tabular-nums text-slate-300">0 円</span>
+        </div>
+      </div>
+
+      <!-- お釣り計算ミニツール -->
+      <div class="bg-slate-950/70 border border-slate-800/90 rounded-2xl p-3.5">
+        <div class="flex items-center justify-between mb-2">
+          <label for="cash-tendered" class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+            <i data-lucide="coins" class="w-3.5 h-3.5 text-amber-400"></i>
+            お釣り計算（出すお金）
+          </label>
+          <button id="clear-cash-btn" type="button" class="text-[11px] font-bold text-slate-400 hover:text-white px-2 py-0.5 rounded-lg hover:bg-slate-800 transition">
+            クリア
+          </button>
+        </div>
+        <div class="flex items-center gap-2 mb-2.5">
+          <div class="relative flex-1">
+            <input type="number" id="cash-tendered" placeholder="例: 5000" min="0" inputmode="numeric"
+                   class="w-full min-h-[44px] bg-slate-900 border border-slate-700 focus:border-amber-500 rounded-xl pl-3.5 pr-8 text-sm font-black text-white text-right tabular-nums focus:outline-none" />
+            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 pointer-events-none">円</span>
+          </div>
+        </div>
+        <!-- クイック紙幣ボタン -->
+        <div class="grid grid-cols-4 gap-1.5 mb-3">
+          <button type="button" data-cash="1000" class="quick-cash-btn min-h-[38px] rounded-xl bg-slate-800/90 hover:bg-slate-700 text-xs font-bold text-slate-200 transition active:scale-95">千円</button>
+          <button type="button" data-cash="2000" class="quick-cash-btn min-h-[38px] rounded-xl bg-slate-800/90 hover:bg-slate-700 text-xs font-bold text-slate-200 transition active:scale-95">2千円</button>
+          <button type="button" data-cash="5000" class="quick-cash-btn min-h-[38px] rounded-xl bg-slate-800/90 hover:bg-slate-700 text-xs font-bold text-slate-200 transition active:scale-95">5千円</button>
+          <button type="button" data-cash="10000" class="quick-cash-btn min-h-[38px] rounded-xl bg-slate-800/90 hover:bg-slate-700 text-xs font-bold text-slate-200 transition active:scale-95">1万円</button>
+        </div>
+        <div class="flex items-center justify-between pt-2.5 border-t border-slate-800/80">
+          <span class="text-xs font-bold text-slate-400">お釣り：</span>
+          <span id="change-amount" class="text-sm font-extrabold tabular-nums text-slate-300">--- 円</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- スマホ片手操作に最適化した下部固定バー（合計金額＋親指で押しやすい追加ボタン） -->
+  <div class="fixed bottom-0 inset-x-0 z-30 bg-slate-900/90 backdrop-blur-2xl border-t border-slate-800/90 shadow-[0_-10px_40px_rgba(0,0,0,0.6)] pb-safe">
+    <div class="max-w-4xl mx-auto px-3.5 sm:px-6 pt-3 flex items-center justify-between gap-3">
+      <!-- 合計金額エリア -->
+      <div class="min-w-0">
+        <div class="flex items-center gap-1.5 text-[11px] text-slate-400 font-bold">
+          <span>お支払い合計</span>
+          <span id="bottom-count-badge" class="px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 text-[10px] tabular-nums">0点</span>
+          <span id="bottom-discount-badge" class="hidden px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 text-[10px] tabular-nums">-0円得</span>
+        </div>
+        <div class="flex items-baseline gap-1 mt-0.5">
+          <span id="bottom-grand-total" class="text-2xl sm:text-3xl font-black text-white tracking-tight tabular-nums">0</span>
+          <span class="text-xs sm:text-sm font-extrabold text-indigo-400">円</span>
+          <span class="text-[10px] text-slate-400 ml-1 tabular-nums">(税 <span id="bottom-tax-total">0</span>円)</span>
+        </div>
+      </div>
+
+      <!-- 親指で押しやすい大きな「商品追加」ボタン -->
+      <button id="add-item-btn" type="button"
+              class="min-h-[50px] px-5 sm:px-6 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 active:scale-95 text-white text-sm font-black shadow-lg shadow-indigo-500/30 flex items-center gap-2 shrink-0 transition cursor-pointer">
+        <i data-lucide="plus" class="w-5 h-5 stroke-[2.5]"></i>
+        <span>商品ば追加</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- アプリケーションロジック -->
+  <script>
+    // ==========================================
+    // 状態管理（State）
+    // ==========================================
+    let items = [];
+    let settings = {
+      standardTaxRate: 8,    // ひとつの標準税率 (%)
+      priceMode: 'excl',     // 'excl' (税抜入力) | 'incl' (税込入力)
+      rounding: 'floor'      // 'floor' (切り捨て) | 'round' (四捨五入) | 'ceil' (切り上げ)
+    };
+
+    const tsugaruPlaceholders = [
+      '例: 津軽りんご（ふじ）🍎',
+      '例: お惣菜 イガメンチ',
+      '例: 筋子おにぎり🍙',
+      '例: 源たれ（焼肉のたれ）',
+      '例: イギリストースト🍞',
+      '例: 半額のお刺身盛り🐟',
+      '例: 嶽きみ（とうもろこし）🌽'
+    ];
+
+    // ==========================================
+    // ユーティリティ
+    // ==========================================
+    function generateId() {
+      return 'item_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+    }
+
+    function formatYen(num) {
+      return Math.round(num).toLocaleString('ja-JP');
+    }
+
+    function applyRounding(value, method) {
+      if (method === 'floor') return Math.floor(value);
+      if (method === 'ceil') return Math.ceil(value);
+      return Math.round(value);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      })[m]);
+    }
+
+    // トースト通知（alert()不使用）
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      const styles = {
+        info: 'bg-slate-900/95 border-indigo-500/50 text-white',
+        success: 'bg-slate-900/95 border-emerald-500/50 text-emerald-300',
+        warn: 'bg-slate-900/95 border-amber-500/50 text-amber-300'
+      };
+      toast.className = `pointer-events-auto backdrop-blur-xl px-4 py-2.5 rounded-2xl border shadow-2xl text-xs font-extrabold text-center transform transition-all duration-250 -translate-y-2 opacity-0 ${styles[type] || styles.info}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+
+      requestAnimationFrame(() => {
+        toast.classList.remove('-translate-y-2', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('-translate-y-2', 'opacity-0');
+        setTimeout(() => toast.remove(), 250);
+      }, 2200);
+    }
+
+    // カスタム確認モーダル（confirm()不使用）
+    function showConfirm(title, message, onConfirm) {
+      const modal = document.getElementById('confirm-modal');
+      document.getElementById('confirm-title').textContent = title;
+      document.getElementById('confirm-message').textContent = message;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      const cleanup = () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        okBtn.removeEventListener('click', handleOk);
+        cancelBtn.removeEventListener('click', handleCancel);
+      };
+      const handleOk = () => { cleanup(); onConfirm(); };
+      const handleCancel = () => cleanup();
+
+      const okBtn = document.getElementById('confirm-ok');
+      const cancelBtn = document.getElementById('confirm-cancel');
+      okBtn.addEventListener('click', handleOk);
+      cancelBtn.addEventListener('click', handleCancel);
+    }
+
+    // ==========================================
+    // ポップオーバー開閉制御
+    // ==========================================
+    function openOptionsPopover() {
+      const popover = document.getElementById('options-popover');
+      const backdrop = document.getElementById('popover-backdrop');
+      const btn = document.getElementById('toggle-options-btn');
+      popover.classList.remove('hidden');
+      backdrop.classList.remove('hidden');
+      btn.setAttribute('aria-expanded', 'true');
+      btn.classList.add('border-indigo-500', 'bg-slate-800');
+    }
+
+    function closeOptionsPopover() {
+      const popover = document.getElementById('options-popover');
+      const backdrop = document.getElementById('popover-backdrop');
+      const btn = document.getElementById('toggle-options-btn');
+      popover.classList.add('hidden');
+      backdrop.classList.add('hidden');
+      btn.setAttribute('aria-expanded', 'false');
+      btn.classList.remove('border-indigo-500', 'bg-slate-800');
+    }
+
+    function toggleOptionsPopover() {
+      const popover = document.getElementById('options-popover');
+      if (popover.classList.contains('hidden')) {
+        openOptionsPopover();
+      } else {
+        closeOptionsPopover();
+      }
+    }
+
+    // ==========================================
+    // 計算ロジック
+    // ==========================================
+    function getItemTaxRate(item) {
+      if (item.taxMode === 'standard') {
+        return Math.max(0, parseFloat(settings.standardTaxRate) || 0);
+      }
+      if (item.taxMode === '8') return 8;
+      if (item.taxMode === '10') return 10;
+      if (item.taxMode === '0') return 0;
+      return Math.max(0, parseFloat(settings.standardTaxRate) || 0);
+    }
+
+    function calculateItemBreakdown(item) {
+      const unitPrice = Math.max(0, parseFloat(item.price) || 0);
+      const qty = Math.max(1, parseInt(item.quantity, 10) || 1);
+      const taxRate = getItemTaxRate(item);
+      const taxMultiplier = 1 + taxRate / 100;
+      const rawLineTotal = unitPrice * qty;
+
+      let discountAmountInput = 0;
+      const discountVal = Math.max(0, parseFloat(item.discountValue) || 0);
+
+      if (item.discountType === 'half') {
+        discountAmountInput = applyRounding(rawLineTotal * 0.5, settings.rounding);
+      } else if (item.discountType === 'percent') {
+        const clampedPct = Math.min(100, discountVal);
+        discountAmountInput = applyRounding(rawLineTotal * (clampedPct / 100), settings.rounding);
+      } else if (item.discountType === 'yen') {
+        discountAmountInput = Math.min(rawLineTotal, discountVal * qty);
+      }
+
+      const afterDiscountInput = Math.max(0, rawLineTotal - discountAmountInput);
+
+      let originalExcl = 0;
+      let originalIncl = 0;
+      let finalExcl = 0;
+      let finalIncl = 0;
+      let taxAmount = 0;
+
+      if (settings.priceMode === 'excl') {
+        originalExcl = rawLineTotal;
+        originalIncl = applyRounding(originalExcl * taxMultiplier, settings.rounding);
+        finalExcl = afterDiscountInput;
+        taxAmount = applyRounding(finalExcl * (taxRate / 100), settings.rounding);
+        finalIncl = finalExcl + taxAmount;
+      } else {
+        originalIncl = rawLineTotal;
+        originalExcl = applyRounding(originalIncl / taxMultiplier, settings.rounding);
+        finalIncl = afterDiscountInput;
+        finalExcl = applyRounding(finalIncl / taxMultiplier, settings.rounding);
+        taxAmount = finalIncl - finalExcl;
+      }
+
+      return {
+        taxRate,
+        originalExcl,
+        originalIncl,
+        finalExcl,
+        finalIncl,
+        taxAmount,
+        discountDisplay: discountAmountInput,
+        hasDiscount: discountAmountInput > 0
+      };
+    }
+
+    function updateSummary() {
+      let totalCount = 0;
+      let totalOriginal = 0;
+      let totalDiscount = 0;
+      let totalExcl = 0;
+      let totalIncl = 0;
+      let totalTax = 0;
+
+      items.forEach(item => {
+        const qty = Math.max(1, parseInt(item.quantity, 10) || 1);
+        totalCount += qty;
+        const calc = calculateItemBreakdown(item);
+
+        totalOriginal += settings.priceMode === 'excl' ? calc.originalExcl : calc.originalIncl;
+        totalDiscount += calc.discountDisplay;
+        totalExcl += calc.finalExcl;
+        totalIncl += calc.finalIncl;
+        totalTax += calc.taxAmount;
+      });
+
+      // 下部固定バーの更新
+      document.getElementById('bottom-count-badge').textContent = `${totalCount}点`;
+      document.getElementById('bottom-grand-total').textContent = formatYen(totalIncl);
+      document.getElementById('bottom-tax-total').textContent = formatYen(totalTax);
+
+      const bottomDiscBadge = document.getElementById('bottom-discount-badge');
+      if (totalDiscount > 0) {
+        bottomDiscBadge.textContent = `-${formatYen(totalDiscount)}円得`;
+        bottomDiscBadge.classList.remove('hidden');
+      } else {
+        bottomDiscBadge.classList.add('hidden');
+      }
+
+      // 詳細パネルの更新
+      document.getElementById('detail-count-badge').textContent = `${totalCount}点`;
+      document.getElementById('summary-original').textContent = `${formatYen(totalOriginal)} 円`;
+      document.getElementById('summary-discount').textContent = `- ${formatYen(totalDiscount)} 円`;
+      document.getElementById('summary-subtotal-excl').textContent = `${formatYen(totalExcl)} 円`;
+      document.getElementById('summary-tax-total').textContent = `${formatYen(totalTax)} 円`;
+
+      updateChangeCalculation(totalIncl);
+      saveToLocalStorage();
+    }
+
+    function updateChangeCalculation(grandTotal) {
+      const cashInput = document.getElementById('cash-tendered');
+      const changeEl = document.getElementById('change-amount');
+      const tendered = parseFloat(cashInput.value);
+
+      if (isNaN(tendered) || cashInput.value === '') {
+        changeEl.textContent = '--- 円';
+        changeEl.className = 'text-sm font-extrabold tabular-nums text-slate-400';
+        return;
+      }
+
+      const diff = tendered - grandTotal;
+      if (diff >= 0) {
+        changeEl.textContent = `${formatYen(diff)} 円だべ！✨`;
+        changeEl.className = 'text-base font-black tabular-nums text-emerald-400';
+      } else {
+        changeEl.textContent = `あと ${formatYen(Math.abs(diff))} 円足りねじゃ！💦`;
+        changeEl.className = 'text-xs font-extrabold tabular-nums text-rose-400';
+      }
+    }
+
+    // ==========================================
+    // 商品カード描画
+    // ==========================================
+    function renderItems() {
+      const listEl = document.getElementById('items-list');
+      const emptyEl = document.getElementById('empty-state');
+
+      if (items.length === 0) {
+        listEl.innerHTML = '';
+        emptyEl.classList.remove('hidden');
+        updateSummary();
+        return;
+      }
+
+      emptyEl.classList.add('hidden');
+      listEl.innerHTML = '';
+
+      const stdRate = parseFloat(settings.standardTaxRate) || 0;
+
+      items.forEach((item, index) => {
+        const calc = calculateItemBreakdown(item);
+        const placeholder = tsugaruPlaceholders[index % tsugaruPlaceholders.length];
+
+        const card = document.createElement('article');
+        card.className = 'bg-slate-900/85 backdrop-blur-md border border-slate-800/90 hover:border-slate-700/90 rounded-3xl p-4 sm:p-5 shadow-xl transition-all';
+        card.dataset.id = item.id;
+
+        const isCustomDiscount = item.discountType === 'yen' || (item.discountType === 'percent' && ![10, 20, 30].includes(Number(item.discountValue)));
+
+        card.innerHTML = `
+          <!-- 1段目：番号・商品名・複製/削除 -->
+          <div class="flex items-center gap-2 mb-3.5">
+            <span class="w-7 h-7 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-xs font-black flex items-center justify-center shrink-0 tabular-nums">
+              ${index + 1}
+            </span>
+            <input type="text" data-field="name" value="${escapeHtml(item.name)}" placeholder="${placeholder}"
+                   class="item-input flex-1 min-w-0 min-h-[42px] bg-slate-950/75 border border-slate-800 focus:border-indigo-500 rounded-xl px-3 text-xs sm:text-sm font-bold text-white placeholder-slate-500 focus:outline-none transition" />
+            <button type="button" data-action="duplicate" title="複製する"
+                    class="w-10 h-10 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-indigo-300 flex items-center justify-center transition shrink-0 active:scale-90">
+              <i data-lucide="copy-plus" class="w-4 h-4"></i>
+            </button>
+            <button type="button" data-action="delete" title="消す"
+                    class="w-10 h-10 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 flex items-center justify-center transition shrink-0 active:scale-90">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+          <!-- 2段目：単価・個数・税率（スマホでも押しやすい44px高さ） -->
+          <div class="grid grid-cols-12 gap-2.5 mb-3.5">
+            <!-- 単価 -->
+            <div class="col-span-5 sm:col-span-5">
+              <label class="block text-[10px] font-bold text-slate-400 mb-1">
+                単価（${settings.priceMode === 'excl' ? '税抜' : '税込'}）
+              </label>
+              <div class="relative flex items-center">
+                <input type="number" data-field="price" value="${item.price === 0 ? '' : item.price}" placeholder="0" min="0" inputmode="numeric"
+                       class="item-input w-full min-h-[44px] bg-slate-950 border border-slate-700/90 focus:border-indigo-500 rounded-xl pl-3 pr-7 text-base font-black text-white text-right tabular-nums focus:outline-none" />
+                <span class="absolute right-2.5 text-[11px] font-bold text-slate-400 pointer-events-none">円</span>
+              </div>
+            </div>
+
+            <!-- 個数ステッパー -->
+            <div class="col-span-4 sm:col-span-4">
+              <label class="block text-[10px] font-bold text-slate-400 mb-1">個数</label>
+              <div class="flex items-center min-h-[44px] bg-slate-950 border border-slate-700/90 rounded-xl overflow-hidden">
+                <button type="button" data-action="dec-qty"
+                        class="w-9 h-[44px] flex items-center justify-center bg-slate-800/80 hover:bg-slate-700 active:bg-slate-600 text-slate-100 font-black text-base transition shrink-0">
+                  −
+                </button>
+                <input type="number" data-field="quantity" value="${item.quantity}" min="1" max="999" inputmode="numeric"
+                       class="item-input w-full min-w-0 bg-transparent text-center text-sm font-black text-white tabular-nums focus:outline-none" />
+                <button type="button" data-action="inc-qty"
+                        class="w-9 h-[44px] flex items-center justify-center bg-slate-800/80 hover:bg-slate-700 active:bg-slate-600 text-slate-100 font-black text-base transition shrink-0">
+                  ＋
+                </button>
+              </div>
+            </div>
+
+            <!-- 税率選択（標準税率を軸に個別変更も可） -->
+            <div class="col-span-3 sm:col-span-3">
+              <label class="block text-[10px] font-bold text-slate-400 mb-1">税率</label>
+              <select data-field="taxMode"
+                      class="item-input w-full min-h-[44px] bg-slate-950 border border-slate-700/90 focus:border-indigo-500 rounded-xl px-2 text-xs font-extrabold text-white focus:outline-none">
+                <option value="standard" ${item.taxMode === 'standard' ? 'selected' : ''}>標準(${stdRate}%)</option>
+                <option value="8" ${item.taxMode === '8' ? 'selected' : ''}>8%</option>
+                <option value="10" ${item.taxMode === '10' ? 'selected' : ''}>10%</option>
+                <option value="0" ${item.taxMode === '0' ? 'selected' : ''}>0%</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 3段目：割引・半額シールワンタップバー（横スクロール＆折り返し両対応で指で押しやすい） -->
+          <div class="bg-slate-950/65 border border-slate-800/80 rounded-2xl p-2.5 mb-3">
+            <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
+              <button type="button" data-discount-preset="none"
+                      class="min-h-[36px] px-3 rounded-xl text-xs font-bold shrink-0 transition active:scale-95 ${item.discountType === 'none' ? 'bg-indigo-600 text-white shadow' : 'bg-slate-800/90 text-slate-400 hover:text-white'}">
+                割引なし
+              </button>
+              <button type="button" data-discount-preset="half"
+                      class="min-h-[36px] px-3 rounded-xl text-xs font-black shrink-0 transition active:scale-95 ${item.discountType === 'half' ? 'bg-rose-600 text-white shadow-md shadow-rose-500/30' : 'bg-rose-500/15 text-rose-300 border border-rose-500/30 hover:bg-rose-500/25'}">
+                🔥 半額
+              </button>
+              <button type="button" data-discount-preset="10"
+                      class="min-h-[36px] px-2.5 rounded-xl text-xs font-bold shrink-0 transition active:scale-95 ${item.discountType === 'percent' && Number(item.discountValue) === 10 ? 'bg-amber-600 text-white' : 'bg-slate-800/90 text-slate-300 hover:bg-slate-700'}">
+                10%引
+              </button>
+              <button type="button" data-discount-preset="20"
+                      class="min-h-[36px] px-2.5 rounded-xl text-xs font-bold shrink-0 transition active:scale-95 ${item.discountType === 'percent' && Number(item.discountValue) === 20 ? 'bg-amber-600 text-white' : 'bg-slate-800/90 text-slate-300 hover:bg-slate-700'}">
+                20%引
+              </button>
+              <button type="button" data-discount-preset="30"
+                      class="min-h-[36px] px-2.5 rounded-xl text-xs font-bold shrink-0 transition active:scale-95 ${item.discountType === 'percent' && Number(item.discountValue) === 30 ? 'bg-amber-600 text-white' : 'bg-slate-800/90 text-slate-300 hover:bg-slate-700'}">
+                30%引
+              </button>
+              <button type="button" data-discount-preset="custom"
+                      class="min-h-[36px] px-2.5 rounded-xl text-xs font-bold shrink-0 transition active:scale-95 ${isCustomDiscount ? 'bg-emerald-600 text-white' : 'bg-slate-800/90 text-slate-300 hover:bg-slate-700'}">
+                自由入力
+              </button>
+            </div>
+
+            <!-- 自由入力フィールド -->
+            <div class="${isCustomDiscount ? 'flex' : 'hidden'} items-center justify-end gap-2 mt-2.5 pt-2.5 border-t border-slate-800/80">
+              <span class="text-[11px] font-bold text-slate-400">割引：</span>
+              <input type="number" data-field="discountValue" value="${item.discountValue || ''}" placeholder="0" min="0" inputmode="numeric"
+                     class="item-input w-24 min-h-[38px] bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl px-2.5 text-sm font-black text-white text-right tabular-nums focus:outline-none" />
+              <select data-field="discountType"
+                      class="item-input min-h-[38px] bg-slate-900 border border-slate-700 rounded-xl px-2.5 text-xs font-bold text-white focus:outline-none">
+                <option value="percent" ${item.discountType === 'percent' ? 'selected' : ''}>% 引き</option>
+                <option value="yen" ${item.discountType === 'yen' ? 'selected' : ''}>円引き (1個)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 4段目：この商品の小計 -->
+          <div class="flex items-center justify-between gap-2 pt-0.5">
+            <span class="text-[11px] text-slate-400 tabular-nums item-sub-info">
+              税抜 ${formatYen(calc.finalExcl)}円 / 税(${calc.taxRate}%) ${formatYen(calc.taxAmount)}円
+            </span>
+            <div class="flex items-baseline gap-1.5 ml-auto">
+              ${calc.hasDiscount ? `<span class="text-xs text-slate-500 line-through tabular-nums item-orig-price">${formatYen(calc.originalIncl)}円</span>` : ''}
+              <span class="text-lg font-black text-white tabular-nums item-final-price">${formatYen(calc.finalIncl)}</span>
+              <span class="text-xs font-bold text-indigo-400">円</span>
+            </div>
+          </div>
+        `;
+
+        listEl.appendChild(card);
+      });
+
+      lucide.createIcons();
+      updateSummary();
+    }
+
+    function updateSingleCardDisplay(cardEl, item) {
+      const calc = calculateItemBreakdown(item);
+      const subInfo = cardEl.querySelector('.item-sub-info');
+      const finalPrice = cardEl.querySelector('.item-final-price');
+      if (subInfo) {
+        subInfo.textContent = `税抜 ${formatYen(calc.finalExcl)}円 / 税(${calc.taxRate}%) ${formatYen(calc.taxAmount)}円`;
+      }
+      if (finalPrice) {
+        finalPrice.textContent = formatYen(calc.finalIncl);
+      }
+      updateSummary();
+    }
+
+    // ==========================================
+    // CRUD操作
+    // ==========================================
+    function addItem(preset = null) {
+      const newItem = preset ? { ...preset, id: generateId() } : {
+        id: generateId(),
+        name: '',
+        price: 0,
+        quantity: 1,
+        taxMode: 'standard',   // 'standard' | '8' | '10' | '0'
+        discountType: 'none',  // 'none' | 'half' | 'percent' | 'yen'
+        discountValue: 0
+      };
+      items.push(newItem);
+      renderItems();
+
+      if (!preset) {
+        const cards = document.querySelectorAll('#items-list > article');
+        const lastCard = cards[cards.length - 1];
+        if (lastCard) {
+          lastCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          const priceInput = lastCard.querySelector('input[data-field="price"]');
+          if (priceInput) priceInput.focus();
+        }
+      }
+    }
+
+    function addSampleItems() {
+      const samples = [
+        { name: '津軽りんご（サンふじ 3個入）🍎', price: 398, quantity: 1, taxMode: 'standard', discountType: 'none', discountValue: 0 },
+        { name: 'お惣菜 イガメンチ（半額シール！）', price: 280, quantity: 2, taxMode: 'standard', discountType: 'half', discountValue: 50 },
+        { name: '台所用洗剤・日用品', price: 450, quantity: 1, taxMode: '10', discountType: 'percent', discountValue: 10 }
+      ];
+      samples.forEach(s => items.push({ ...s, id: generateId() }));
+      renderItems();
+      showToast('お試しサンプルば3つ入れたべさ！🍎✨', 'success');
+    }
+
+    // ==========================================
+    // ストレージ保存・復元
+    // ==========================================
+    function saveToLocalStorage() {
+      try {
+        localStorage.setItem('tsugaru_calc_store_v2', JSON.stringify({ items, settings }));
+      } catch (e) {}
+    }
+
+    function loadFromLocalStorage() {
+      try {
+        const raw = localStorage.getItem('tsugaru_calc_store_v2');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed.settings) settings = { ...settings, ...parsed.settings };
+          if (Array.isArray(parsed.items)) items = parsed.items;
+        }
+      } catch (e) {}
+    }
+
+    // ==========================================
+    // イベントリスナー初期化
+    // ==========================================
+    function initEventListeners() {
+      // ポップオーバー開閉
+      document.getElementById('toggle-options-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleOptionsPopover();
+      });
+      document.getElementById('close-options-btn').addEventListener('click', closeOptionsPopover);
+      document.getElementById('done-options-btn').addEventListener('click', closeOptionsPopover);
+      document.getElementById('popover-backdrop').addEventListener('click', closeOptionsPopover);
+
+      // Escキーでポップオーバー閉じる
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeOptionsPopover();
+      });
+
+      // 標準税率プリセット＆自由入力
+      document.querySelectorAll('.tax-preset-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          settings.standardTaxRate = parseFloat(btn.dataset.taxPreset);
+          syncSettingsUI();
+          renderItems();
+          showToast(`標準税率ば ${settings.standardTaxRate}% にしたじゃ！`, 'info');
+        });
+      });
+
+      document.getElementById('standard-tax-input').addEventListener('input', (e) => {
+        settings.standardTaxRate = Math.max(0, parseFloat(e.target.value) || 0);
+        syncSettingsUI(false);
+        renderItems();
+      });
+
+      // 税抜/税込モード切替
+      document.querySelectorAll('.price-mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          settings.priceMode = btn.dataset.mode;
+          syncSettingsUI();
+          renderItems();
+          showToast(settings.priceMode === 'excl' ? '「税抜価格」入力にしたべ！' : '「税込価格」入力にしたべ！', 'info');
+        });
+      });
+
+      // 端数処理
+      document.getElementById('rounding-select').addEventListener('change', (e) => {
+        settings.rounding = e.target.value;
+        renderItems();
+      });
+
+      // 商品追加
+      document.getElementById('add-item-btn').addEventListener('click', () => {
+        addItem();
+        showToast('商品枠ば追加したじゃ！🛒', 'info');
+      });
+      document.getElementById('empty-add-btn').addEventListener('click', () => addItem());
+
+      // サンプル追加
+      document.getElementById('add-sample-btn').addEventListener('click', addSampleItems);
+
+      // 全部消す
+      document.getElementById('clear-all-btn').addEventListener('click', () => {
+        if (items.length === 0) {
+          showToast('もう空っぽだべさ！😂', 'warn');
+          return;
+        }
+        showConfirm(
+          'カゴの中身ば全部消すが？',
+          '今入力してる商品ば全部リセットするけど、ほんとにいいんだば？',
+          () => {
+            items = [];
+            document.getElementById('cash-tendered').value = '';
+            renderItems();
+            showToast('スッキリ全部消したべ！✨', 'info');
+          }
+        );
+      });
+
+      // 商品リストのイベント委譲
+      const itemsListEl = document.getElementById('items-list');
+
+      itemsListEl.addEventListener('input', (e) => {
+        const card = e.target.closest('[data-id]');
+        if (!card) return;
+        const item = items.find(i => i.id === card.dataset.id);
+        if (!item) return;
+
+        const field = e.target.dataset.field;
+        if (field === 'name') {
+          item.name = e.target.value;
+          saveToLocalStorage();
+        } else if (field === 'price') {
+          item.price = parseFloat(e.target.value) || 0;
+          updateSingleCardDisplay(card, item);
+        } else if (field === 'quantity') {
+          item.quantity = Math.max(1, parseInt(e.target.value, 10) || 1);
+          updateSingleCardDisplay(card, item);
+        } else if (field === 'discountValue') {
+          item.discountValue = parseFloat(e.target.value) || 0;
+          updateSingleCardDisplay(card, item);
+        }
+      });
+
+      itemsListEl.addEventListener('change', (e) => {
+        const card = e.target.closest('[data-id]');
+        if (!card) return;
+        const item = items.find(i => i.id === card.dataset.id);
+        if (!item) return;
+
+        const field = e.target.dataset.field;
+        if (field === 'taxMode' || field === 'discountType') {
+          item[field] = e.target.value;
+          renderItems();
+        }
+      });
+
+      itemsListEl.addEventListener('click', (e) => {
+        const card = e.target.closest('[data-id]');
+        if (!card) return;
+        const index = items.findIndex(i => i.id === card.dataset.id);
+        if (index === -1) return;
+        const item = items[index];
+
+        const actionBtn = e.target.closest('[data-action]');
+        if (actionBtn) {
+          const action = actionBtn.dataset.action;
+          if (action === 'delete') {
+            items.splice(index, 1);
+            renderItems();
+            showToast('1つ消したじゃ', 'info');
+          } else if (action === 'duplicate') {
+            const copy = { ...item, id: generateId(), name: item.name ? `${item.name} (コピー)` : '' };
+            items.splice(index + 1, 0, copy);
+            renderItems();
+            showToast('同じ商品ば複製したべ！👍', 'success');
+          } else if (action === 'inc-qty') {
+            item.quantity = (parseInt(item.quantity, 10) || 1) + 1;
+            renderItems();
+          } else if (action === 'dec-qty') {
+            if (item.quantity > 1) {
+              item.quantity -= 1;
+              renderItems();
+            }
+          }
+          return;
+        }
+
+        const presetBtn = e.target.closest('[data-discount-preset]');
+        if (presetBtn) {
+          const preset = presetBtn.dataset.discountPreset;
+          if (preset === 'none') {
+            item.discountType = 'none';
+            item.discountValue = 0;
+          } else if (preset === 'half') {
+            item.discountType = 'half';
+            item.discountValue = 50;
+            showToast('半額シール適用したべさ！🔥', 'success');
+          } else if (['10', '20', '30'].includes(preset)) {
+            item.discountType = 'percent';
+            item.discountValue = Number(preset);
+          } else if (preset === 'custom') {
+            item.discountType = 'percent';
+            item.discountValue = 15;
+          }
+          renderItems();
+        }
+      });
+
+      // お釣り計算
+      document.getElementById('cash-tendered').addEventListener('input', () => updateSummary());
+      document.querySelectorAll('.quick-cash-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const val = Number(btn.dataset.cash);
+          const input = document.getElementById('cash-tendered');
+          input.value = (parseFloat(input.value) || 0) + val;
+          updateSummary();
+        });
+      });
+      document.getElementById('clear-cash-btn').addEventListener('click', () => {
+        document.getElementById('cash-tendered').value = '';
+        updateSummary();
+      });
+
+      // メモコピー
+      document.getElementById('copy-receipt-btn').addEventListener('click', () => {
+        if (items.length === 0) {
+          showToast('コピーする商品がまだねじゃ！💦', 'warn');
+          return;
+        }
+        let lines = ['🍎【お買い物計算メモ】🍎'];
+        items.forEach((item, idx) => {
+          const calc = calculateItemBreakdown(item);
+          const name = item.name.trim() || `商品${idx + 1}`;
+          const discText = calc.hasDiscount ? ` (-${formatYen(calc.discountDisplay)}円)` : '';
+          lines.push(`・${name} ×${item.quantity}：${formatYen(calc.finalIncl)}円 [税${calc.taxRate}%]${discText}`);
+        });
+        lines.push('------------------------');
+        lines.push(`お得分：-${document.getElementById('summary-discount').textContent.replace('- ', '')}`);
+        lines.push(`お支払い合計（税込）：${document.getElementById('bottom-grand-total').textContent} 円`);
+
+        const textarea = document.createElement('textarea');
+        textarea.value = lines.join('\n');
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+          document.execCommand('copy');
+          showToast('お買い物メモばコピーしたべ！📋✨', 'success');
+        } catch (err) {
+          showToast('コピーに失敗したじゃ…💦', 'warn');
+        }
+        document.body.removeChild(textarea);
+      });
+    }
+
+    function syncSettingsUI(updateTaxInput = true) {
+      const rate = parseFloat(settings.standardTaxRate) || 0;
+      if (updateTaxInput) {
+        document.getElementById('standard-tax-input').value = rate;
+      }
+      document.getElementById('header-tax-badge').textContent = `税${rate}%`;
+      document.getElementById('rounding-select').value = settings.rounding;
+
+      document.querySelectorAll('.tax-preset-btn').forEach(btn => {
+        const presetRate = parseFloat(btn.dataset.taxPreset);
+        if (presetRate === rate) {
+          btn.className = 'tax-preset-btn px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition bg-indigo-600 text-white shadow';
+        } else {
+          btn.className = 'tax-preset-btn px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition bg-slate-800 text-slate-300 hover:bg-slate-700';
+        }
+      });
+
+      document.querySelectorAll('.price-mode-btn').forEach(btn => {
+        if (btn.dataset.mode === settings.priceMode) {
+          btn.className = 'price-mode-btn min-h-[38px] rounded-lg text-xs font-extrabold transition bg-indigo-600 text-white shadow';
+        } else {
+          btn.className = 'price-mode-btn min-h-[38px] rounded-lg text-xs font-extrabold transition text-slate-400 hover:text-white';
+        }
+      });
+
+      document.getElementById('price-mode-desc').textContent =
+        settings.priceMode === 'excl'
+          ? '値札の「本体価格」ば入れるとき用だば'
+          : '値札の「税込総額」ば入れるとき用だば';
+    }
+
+    // ==========================================
+    // 起動処理
+    // ==========================================
+    window.addEventListener('DOMContentLoaded', () => {
+      loadFromLocalStorage();
+      syncSettingsUI();
+      initEventListeners();
+
+      // 最初は必ずオプションポップオーバーを閉じた状態にする
+      closeOptionsPopover();
+
+      if (items.length === 0) {
+        addItem();
+      } else {
+        renderItems();
+      }
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
