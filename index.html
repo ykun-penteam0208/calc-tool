@@ -1,141 +1,144 @@
 <!DOCTYPE html>
 <html lang="ja" class="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>計算ツール ポータル</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
-          }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ネオン数学ポータル | Quantum Math Hub</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: { 700: '#1e293b', 800: '#0f172a', 900: '#020617' }
+                    }
+                }
+            }
         }
-      }
-    };
-    window.addEventListener('DOMContentLoaded', () => {
-      if (window.lucide && typeof window.lucide.createIcons === 'function') {
-        window.lucide.createIcons();
-      }
-    });
-  </script>
+    </script>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between antialiased p-4 sm:p-8">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-white antialiased overflow-x-hidden pb-10">
 
-  <div class="max-w-5xl w-full mx-auto flex-grow flex flex-col justify-center">
-    <!-- ヘッダー -->
-    <header class="text-center mb-10">
-      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/25 text-indigo-300 text-xs font-medium mb-3">
-        <i data-lucide="compass" class="w-3.5 h-3.5 text-indigo-400"></i>
-        <span>計算ツール総合ポータル</span>
-      </div>
-      <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-white mb-2">
-        計算ツール置き場 🧮✨
-      </h1>
-      <p class="text-slate-400 text-sm sm:text-base max-w-xl mx-auto">
-        自慢の数学シミュレーターや計算ツールへ、ここから一発でアクセスできるぞい！
-      </p>
+    <!-- ヘッダーエリア -->
+    <header class="relative z-10 w-full px-6 py-4 flex justify-between items-center bg-slate-900/85 backdrop-blur-md border-b border-cyan-500/20">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-400 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+                <span class="font-extrabold text-cyan-400 text-lg">π</span>
+            </div>
+            <div>
+                <h1 class="font-extrabold text-base sm:text-xl tracking-wider text-white">ネオン数学ポータル</h1>
+                <p class="text-[10px] sm:text-xs text-cyan-400/70">Quantum Math & Geometry Hub</p>
+            </div>
+        </div>
+        <div class="text-xs text-cyan-400/80 font-mono hidden sm:block bg-cyan-950/60 border border-cyan-500/30 px-3 py-1.5 rounded-lg">
+            Status: Online 🚀
+        </div>
     </header>
 
-    <!-- ツール一覧グリッド -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      
-      <!-- バビロニア法 平方根シミュレーター -->
-      <a href="./shape/square/squareroot/sqrt-1.html" class="bg-slate-900 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-5 transition-all shadow-lg hover:shadow-indigo-500/10 group block flex flex-col justify-between">
-        <div>
-          <div class="flex items-center gap-3 mb-3">
-            <div class="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition shrink-0">
-              <i data-lucide="square-radical" class="w-5 h-5"></i>
-            </div>
-            <div>
-              <h2 class="text-sm font-bold text-white group-hover:text-indigo-400 transition">バビロニア法 平方根</h2>
-              <span class="text-[10px] text-slate-400 font-mono">squareroot/</span>
-            </div>
-          </div>
-          <p class="text-xs text-slate-400 leading-relaxed">
-            「割る・足す・2で割る」の3ステップで真の平方根に吸い寄せられる様子を可視化！
-          </p>
-        </div>
-      </a>
+    <!-- メインコンテンツ -->
+    <main class="max-w-5xl w-full mx-auto px-4 py-8 flex-grow flex flex-col gap-8">
 
-      <!-- 三平方の定理ビジュアライザー (NEW!) -->
-      <a href="./shape/triangle/pythagoras.html" class="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 rounded-2xl p-5 transition-all shadow-lg hover:shadow-emerald-500/10 group block flex flex-col justify-between">
-        <div>
-          <div class="flex items-center gap-3 mb-3">
-            <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition shrink-0">
-              <i data-lucide="triangle" class="w-5 h-5"></i>
-            </div>
-            <div>
-              <h2 class="text-sm font-bold text-white group-hover:text-emerald-400 transition">三平方の定理</h2>
-              <span class="text-[10px] text-slate-400 font-mono">shape/triangle/</span>
-            </div>
-          </div>
-          <p class="text-xs text-slate-400 leading-relaxed">
-            直角三角形の斜辺を直感で計算！きれいな根号や小数表示も切り替え可能。
-          </p>
-        </div>
-      </a>
-
-      <!-- ネオンパイ・オデッセイ -->
-      <a href="./shape/circ/pi/neon_pi_odyssey.html" class="bg-slate-900 border border-slate-800 hover:border-cyan-500/50 rounded-2xl p-5 transition-all shadow-lg hover:shadow-cyan-500/10 group block flex flex-col justify-between">
-        <div>
-          <div class="flex items-center gap-3 mb-3">
-            <div class="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition shrink-0">
-              <i data-lucide="sparkles" class="w-5 h-5"></i>
-            </div>
-            <div>
-              <h2 class="text-sm font-bold text-white group-hover:text-cyan-400 transition">ネオンパイ・オデッセイ</h2>
-              <span class="text-[10px] text-slate-400 font-mono">shape/circ/pi/</span>
-            </div>
-          </div>
-          <p class="text-xs text-slate-400 leading-relaxed">
-            円周率やパイにまつわるパズルのシミュレーターツール！
-          </p>
-        </div>
-      </a>
-
-      <!-- 進数変換コンバーター -->
-      <a href="./number/base/base.html" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-5 transition-all shadow-lg hover:shadow-amber-500/10 group block flex flex-col justify-between">
-        <div>
-          <div class="flex items-center gap-3 mb-3">
-            <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:scale-110 transition shrink-0">
-              <i data-lucide="binary" class="w-5 h-5"></i>
-            </div>
-            <div>
-              <h2 class="text-sm font-bold text-white group-hover:text-amber-400 transition">進数変換コンバーター</h2>
-              <span class="text-[10px] text-slate-400 font-mono">number/base/</span>
-            </div>
-          </div>
-          <p class="text-xs text-slate-400 leading-relaxed">
-            2〜36進数を自由に行き来できる便利な数値変換ツール！
-          </p>
-        </div>
-      </a>
-    <!-- 素数ロケーターのカード -->
-        <a href="number/prime/look.html" class="group relative bg-slate-900/80 border border-cyan-500/30 hover:border-cyan-400 rounded-2xl p-6 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/20 flex flex-col justify-between">
-            <div>
-                <div class="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 mb-4 group-hover:scale-110 transition-transform">
-                    <i data-lucide="search" class="w-6 h-6"></i>
+        <!-- ヒーローセクション -->
+        <div class="relative bg-gradient-to-r from-cyan-950/50 via-slate-900/80 to-slate-900/90 border border-cyan-500/30 rounded-3xl p-6 sm:p-8 backdrop-blur shadow-[0_0_30px_rgba(6,182,212,0.1)] overflow-hidden">
+            <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="relative z-10 flex flex-col gap-3">
+                <div class="inline-flex items-center gap-2 text-xs text-cyan-300 bg-cyan-950/80 border border-cyan-500/40 px-3 py-1 rounded-full w-fit font-semibold">
+                    <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                    リアルタイム数学演算エンジン
                 </div>
-                <h2 class="text-lg font-bold text-white mb-2 group-hover:text-cyan-300 transition-colors">素数ロケーター</h2>
-                <p class="text-xs text-slate-400 leading-relaxed">指定した数の近くにある素数や、N番目の素数を一瞬で探せるシミュレーターだべ！</p>
+                <h2 class="text-2xl sm:text-3xl font-black tracking-tight text-white">
+                    数学の美しさを、<span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-teal-300">手元で体感する。</span>
+                </h2>
+                <p class="text-xs sm:text-sm text-slate-400 max-w-2xl leading-relaxed">
+                    スマホやPCのブラウザで軽快に動作する、モダンでインタラクティブな数学・幾何学ツール群。数値の変動にリアルタイムで連動するビジュアルシステムを搭載。
+                </p>
             </div>
-            <div class="mt-6 flex items-center gap-1 text-xs text-cyan-400 font-semibold">
-                <span>起動する</span> <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+        </div>
+
+        <!-- ツール一覧グリッド -->
+        <div class="flex flex-col gap-4">
+            <h3 class="text-sm font-bold text-cyan-400 tracking-wider uppercase px-1 flex items-center gap-2">
+                <i data-lucide="grid" class="w-4 h-4"></i> 利用可能なツール一覧
+            </h3>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+                <!-- ツール1: 素数ロケーター -->
+                <a href="number/prime/look.html" class="group bg-slate-900/70 border border-cyan-500/20 hover:border-cyan-400/60 rounded-2xl p-5 backdrop-blur transition-all duration-300 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)] hover:-translate-y-1 flex flex-col justify-between gap-4">
+                    <div class="flex flex-col gap-2">
+                        <div class="flex justify-between items-start">
+                            <div class="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition">
+                                <span class="font-bold text-base">🔍</span>
+                            </div>
+                            <span class="text-[10px] font-mono text-cyan-400 bg-cyan-950/80 border border-cyan-500/30 px-2 py-0.5 rounded">Number</span>
+                        </div>
+                        <h4 class="font-bold text-white group-hover:text-cyan-300 transition text-base">素数ロケーター</h4>
+                        <p class="text-xs text-slate-400 leading-relaxed">指定した数値の「直前の素数」と「直後の素数」を瞬時に探すリアルタイム検索ツール。</p>
+                    </div>
+                    <div class="flex items-center gap-1 text-xs text-cyan-400 font-semibold pt-2 border-t border-slate-800/80 group-hover:translate-x-1 transition">
+                        起動する <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                    </div>
+                </a>
+
+                <!-- ツール2: ピタゴラスの定理 -->
+                <a href="shape/triangle/pythagoras.html" class="group bg-slate-900/70 border border-cyan-500/20 hover:border-cyan-400/60 rounded-2xl p-5 backdrop-blur transition-all duration-300 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)] hover:-translate-y-1 flex flex-col justify-between gap-4">
+                    <div class="flex flex-col gap-2">
+                        <div class="flex justify-between items-start">
+                            <div class="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition">
+                                <span class="font-bold text-base">📐</span>
+                            </div>
+                            <span class="text-[10px] font-mono text-cyan-400 bg-cyan-950/80 border border-cyan-500/30 px-2 py-0.5 rounded">Geometry</span>
+                        </div>
+                        <h4 class="font-bold text-white group-hover:text-cyan-300 transition text-base">ピタゴラスの定理</h4>
+                        <p class="text-xs text-slate-400 leading-relaxed">直角三角形の辺から斜辺を計算。入力値に連動して図形がなめらかにアニメーション変形。</p>
+                    </div>
+                    <div class="flex items-center gap-1 text-xs text-cyan-400 font-semibold pt-2 border-t border-slate-800/80 group-hover:translate-x-1 transition">
+                        起動する <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                    </div>
+                </a>
+
+                <!-- ツール3: 正三角形アナライザー（NEW!） -->
+                <a href="shape/triangle/equilateral.html" class="group bg-slate-900/70 border border-cyan-500/20 hover:border-cyan-400/60 rounded-2xl p-5 backdrop-blur transition-all duration-300 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)] hover:-translate-y-1 flex flex-col justify-between gap-4 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 bg-cyan-500 text-slate-950 text-[9px] font-black px-2.5 py-0.5 rounded-bl-lg">NEW</div>
+                    <div class="flex flex-col gap-2">
+                        <div class="flex justify-between items-start">
+                            <div class="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition">
+                                <span class="font-bold text-base">🔺</span>
+                            </div>
+                            <span class="text-[10px] font-mono text-cyan-400 bg-cyan-950/80 border border-cyan-500/30 px-2 py-0.5 rounded">Geometry</span>
+                        </div>
+                        <h4 class="font-bold text-white group-hover:text-cyan-300 transition text-base">正三角形アナライザー</h4>
+                        <p class="text-xs text-slate-400 leading-relaxed">1辺から高さ・面積を求めたり、高さから1辺を逆算。スムーズなアニメーション描画付き。</p>
+                    </div>
+                    <div class="flex items-center gap-1 text-xs text-cyan-400 font-semibold pt-2 border-t border-slate-800/80 group-hover:translate-x-1 transition">
+                        起動する <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                    </div>
+                </a>
+
             </div>
-        </a>
-    </div>
-  </div>
+        </div>
 
-  <footer class="mt-12 text-center text-xs text-slate-500 border-t border-slate-900 pt-4">
-    <p>GitHub Pages Calculation Tools Portal</p>
-  </footer>
+    </main>
 
+    <!-- フッター -->
+    <footer class="text-center text-xs text-slate-500 py-6 border-t border-slate-900 mt-10 flex flex-col gap-2">
+        <p>ネオン数学ポータル / GitHub Pages Stack</p>
+        <p class="text-[10px] text-slate-600">Designed with Tailwind CSS, Alpine.js & Lucide Icons.</p>
+    </footer>
+
+    <!-- アイコン初期化スクリプト -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
+            }
+        });
+    </script>
 </body>
 </html>
