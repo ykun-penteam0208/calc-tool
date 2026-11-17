@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ja" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>正三角形アナライザー | ネオン数学ポータル</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: { 700: '#1e293b', 800: '#0f172a', 900: '#020617' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* 正三角形がなめらかに変形するためのトランジション */
+        .triangle-path {
+            transition: d 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-white antialiased overflow-x-hidden pb-10">
+
+    <!-- ヘッダーエリア -->
+    <header class="relative z-10 w-full px-4 py-3 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 bg-slate-900/80 backdrop-blur-md border-b border-cyan-500/20">
+        <div class="flex items-center justify-between w-full sm:w-auto">
+            <a href="../../index.html" class="inline-flex items-center gap-1 text-xs text-cyan-400 hover:underline font-semibold bg-cyan-950/50 border border-cyan-500/30 px-2.5 py-1.5 rounded-lg transition">
+                <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> ポータルに戻る
+            </a>
+        </div>
+        <div class="flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-400 flex items-center justify-center shrink-0">
+                <span class="font-bold text-cyan-400 text-base">🔺</span>
+            </div>
+            <div>
+                <h1 class="font-extrabold text-sm sm:text-lg tracking-wider text-white">正三角形アナライザー</h1>
+                <p class="text-[10px] sm:text-xs text-cyan-400/70">1辺と高さを相互に計算＆ビジュアル化</p>
+            </div>
+        </div>
+        <div class="hidden sm:block w-24"></div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main x-data="equilateralApp()" class="max-w-4xl w-full mx-auto px-4 py-6 flex-grow flex flex-col gap-6">
+
+        <!-- タブ切り替え -->
+        <div class="flex rounded-xl bg-slate-900 p-1 border border-cyan-500/30">
+            <button @click="mode = 'fromSide'; calc();" :class="mode === 'fromSide' ? 'bg-cyan-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'" class="flex-1 py-2 text-xs sm:text-sm rounded-lg transition text-center flex items-center justify-center gap-1.5">
+                <i data-lucide="ruler" class="w-4 h-4"></i> 1辺から高さを求める
+            </button>
+            <button @click="mode = 'fromHeight'; calc();" :class="mode === 'fromHeight' ? 'bg-cyan-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'" class="flex-1 py-2 text-xs sm:text-sm rounded-lg transition text-center flex items-center justify-center gap-1.5">
+                <i data-lucide="maximize-2" class="w-4 h-4"></i> 高さから1辺を求める
+            </button>
+        </div>
+
+        <div class="bg-slate-900/60 border border-cyan-500/20 rounded-2xl p-5 sm:p-6 backdrop-blur flex flex-col gap-6">
+            
+            <!-- ① 1辺から高さを求めるモード -->
+            <div x-show="mode === 'fromSide'" class="flex flex-col gap-4">
+                <div>
+                    <h2 class="text-base sm:text-lg font-bold text-cyan-300 mb-1">1辺の長さ ($s$) から計算</h2>
+                    <p class="text-xs text-slate-400">正三角形の1辺の長さを入力すると、高さ ($h$) と面積が自動で弾き出されるべ！✨</p>
+                </div>
+                <div class="bg-slate-950/80 border border-cyan-500/30 rounded-xl p-4 flex flex-col gap-2">
+                    <label class="text-xs text-cyan-400 font-bold">1辺の長さ ($s$)</label>
+                    <input type="number" x-model.number="side" @input="calc()" min="0.1" step="any" class="bg-slate-900 border border-cyan-500/40 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-cyan-400 text-base">
+                </div>
+            </div>
+
+            <!-- ② 高さから1辺を求めるモード -->
+            <div x-show="mode === 'fromHeight'" class="flex flex-col gap-4" style="display: none;">
+                <div>
+                    <h2 class="text-base sm:text-lg font-bold text-cyan-300 mb-1">高さ ($h$) から計算</h2>
+                    <p class="text-xs text-slate-400">正三角形の高さの長さを入力すると、元の1辺の長さ ($s$) と面積が逆算されるべ！🚀</p>
+                </div>
+                <div class="bg-slate-950/80 border border-cyan-500/30 rounded-xl p-4 flex flex-col gap-2">
+                    <label class="text-xs text-cyan-400 font-bold">高さの長さ ($h$)</label>
+                    <input type="number" x-model.number="heightInput" @input="calc()" min="0.1" step="any" class="bg-slate-900 border border-cyan-500/40 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-cyan-400 text-base">
+                </div>
+            </div>
+
+            <!-- ビジュアル表示エリア（アニメーション付き正三角形） -->
+            <div class="bg-slate-950/90 border border-cyan-500/30 rounded-2xl p-6 flex flex-col items-center justify-center relative overflow-hidden min-h-[260px]">
+                <div class="absolute top-3 left-4 text-xs text-slate-400 font-mono">正三角形ビジュアライザー</div>
+
+                <svg viewBox="0 0 300 200" class="w-full max-w-[320px] h-48 overflow-visible">
+                    <!-- 正三角形のパス -->
+                    <path :d="getEquilateralPath()" class="triangle-path" fill="rgba(6, 182, 212, 0.15)" stroke="#06b6d4" stroke-width="3" stroke-linejoin="round" />
+                    
+                    <!-- 高さを示す点線 -->
+                    <line :x1="topX" :y1="topY" :x2="topX" :y2="baseY" stroke="#38bdf8" stroke-dasharray="4" stroke-width="1.5" opacity="0.7"></line>
+                </svg>
+            </div>
+
+            <!-- 計算結果グリッド表示 -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="bg-slate-950/80 border border-cyan-500/30 rounded-xl p-4 text-center">
+                    <div class="text-xs text-slate-400 mb-1" x-text="mode === 'fromSide' ? '計算された高さ (h)' : '計算された1辺 (s)'">結果</div>
+                    <div class="text-xl sm:text-2xl font-extrabold text-cyan-400 tracking-wider" x-text="primaryResult !== null ? primaryResult : '-'">-</div>
+                </div>
+                <div class="bg-slate-950/80 border border-cyan-500/30 rounded-xl p-4 text-center">
+                    <div class="text-xs text-slate-400 mb-1">面積 (Area)</div>
+                    <div class="text-xl sm:text-2xl font-extrabold text-cyan-400 tracking-wider" x-text="areaResult !== null ? areaResult : '-'">-</div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- フッター -->
+    <footer class="text-center text-xs text-slate-500 py-6 border-t border-slate-900 mt-10">
+        正三角形アナライザー / ネオン数学ポータル
+    </footer>
+
+    <!-- ロジックスクリプト -->
+    <script>
+        function equilateralApp() {
+            return {
+                mode: 'fromSide', // 'fromSide' or 'fromHeight'
+                side: 6,
+                heightInput: 5.196,
+                primaryResult: null,
+                areaResult: null,
+                topX: 150,
+                topY: 30,
+                baseY: 170,
+
+                init() {
+                    this.calc();
+                    setTimeout(() => {
+                        if (window.lucide) window.lucide.createIcons();
+                    }, 50);
+                },
+
+                calc() {
+                    if (this.mode === 'fromSide') {
+                        let s = parseFloat(this.side);
+                        if (isNaN(s) || s <= 0) {
+                            this.primaryResult = '有効な数値をいれてね';
+                            this.areaResult = '-';
+                            return;
+                        }
+                        // 高さ h = (√3 / 2) * s
+                        let h = (Math.sqrt(3) / 2) * s;
+                        // 面積 A = (√3 / 4) * s^2
+                        let area = (Math.sqrt(3) / 4) * (s * s);
+
+                        this.primaryResult = Number.isInteger(h) ? h : h.toFixed(3);
+                        this.areaResult = Number.isInteger(area) ? area : area.toFixed(3);
+                    } else {
+                        let h = parseFloat(this.heightInput);
+                        if (isNaN(h) || h <= 0) {
+                            this.primaryResult = '有効な数値をいれてね';
+                            this.areaResult = '-';
+                            return;
+                        }
+                        // 1辺 s = (2 / √3) * h
+                        let s = (2 / Math.sqrt(3)) * h;
+                        // 面積 A = (h^2) / √3
+                        let area = (h * h) / Math.sqrt(3);
+
+                        this.primaryResult = Number.isInteger(s) ? s : s.toFixed(3);
+                        this.areaResult = Number.isInteger(area) ? area : area.toFixed(3);
+                    }
+                },
+
+                getEquilateralPath() {
+                    // 現在のモードに応じて描画用の1辺と高さを決定
+                    let s, h;
+                    if (this.mode === 'fromSide') {
+                        s = parseFloat(this.side) || 6;
+                        h = (Math.sqrt(3) / 2) * s;
+                    } else {
+                        h = parseFloat(this.heightInput) || 5.196;
+                        s = (2 / Math.sqrt(3)) * h;
+                    }
+
+                    // SVG内で綺麗に収まるようにスケール調整（最大幅160、最大高さ130）
+                    let maxVal = Math.max(s, h, 1);
+                    let wDraw = (s / maxVal) * 160;
+                    let hDraw = (h / maxVal) * 130;
+
+                    let centerX = 150;
+                    let baseY = 165;
+                    
+                    let x1 = centerX - (wDraw / 2); // 左下
+                    let y1 = baseY;
+                    let x2 = centerX + (wDraw / 2); // 右下
+                    let y2 = baseY;
+                    let x3 = centerX;               // 頂点
+                    let y3 = baseY - hDraw;
+
+                    this.topX = x3;
+                    this.topY = y3;
+                    this.baseY = baseY;
+
+                    return `M ${x1},${y1} L ${x2},${y2} L ${x3},${y3} Z`;
+                }
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
+            }
+        });
+    </script>
+</body>
+</html>
