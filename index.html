@@ -21,14 +21,12 @@
     };
   </script>
   <style>
-    /* 背景の微細なグリッド模様 */
     .bg-grid-pattern {
-      background-image: 
+      background-image:
         linear-gradient(to right, rgba(99, 102, 241, 0.06) 1px, transparent 1px),
         linear-gradient(to bottom, rgba(99, 102, 241, 0.06) 1px, transparent 1px);
       background-size: 32px 32px;
     }
-    /* カードの滑らかな登場アニメーション */
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(12px); }
       to { opacity: 1; transform: translateY(0); }
@@ -45,18 +43,18 @@
   <div class="fixed bottom-[-10%] right-[-5%] w-[400px] h-[300px] bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none"></div>
 
   <div class="max-w-5xl w-full mx-auto flex-grow flex flex-col justify-center relative z-10">
-    
+
     <!-- ヘッダー -->
     <header class="text-center mb-8">
       <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/80 border border-indigo-500/30 text-indigo-300 text-xs font-medium mb-4 shadow-sm backdrop-blur-md">
         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
         <span class="font-mono tracking-wider uppercase text-[11px]">All-in-One Web Utilities</span>
       </div>
-      
+
       <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight mb-3 bg-gradient-to-r from-white via-indigo-200 to-cyan-300 bg-clip-text text-transparent">
         Ykun Tool Portal 🛠️✨
       </h1>
-      
+
       <p class="text-slate-400 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
         計算・数学シミュレーターから日常の便利ユーティリティまで、自作Webツールへここから一発アクセスだべ！🚀
       </p>
@@ -64,7 +62,7 @@
 
     <!-- 検索＆カテゴリフィルターバー -->
     <div class="mb-8 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-900/70 backdrop-blur-md border border-slate-800/80 p-3 rounded-2xl shadow-xl">
-      
+
       <!-- カテゴリタブ -->
       <div class="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 w-full sm:w-auto" id="category-tabs">
         <button data-filter="all" class="filter-btn active px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all bg-indigo-600 text-white shadow-md shadow-indigo-500/20">
@@ -84,10 +82,10 @@
       <!-- リアルタイム検索窓 -->
       <div class="relative w-full sm:w-64">
         <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-        <input 
-          type="text" 
-          id="tool-search" 
-          placeholder="ツール名やキーワードで検索..." 
+        <input
+          type="text"
+          id="tool-search"
+          placeholder="ツール名やキーワードで検索..."
           class="w-full bg-slate-950/90 border border-slate-800 focus:border-indigo-500 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-100 placeholder-slate-500 outline-none transition-colors"
         >
       </div>
@@ -95,7 +93,7 @@
 
     <!-- ツール一覧グリッド -->
     <div id="tools-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      
+
       <!-- バビロニア法 平方根シミュレーター -->
       <a href="./shape/square/squareroot/sqrt-1.html" data-category="math" class="tool-card bg-slate-900/90 backdrop-blur-sm border border-slate-800 hover:border-indigo-500/60 hover:-translate-y-1 rounded-2xl p-5 transition-all duration-300 shadow-lg hover:shadow-indigo-500/15 group flex flex-col justify-between">
         <div>
@@ -263,29 +261,32 @@
         </div>
       </a>
 
-      <!-- 全部入り多機能計算機 (更新中) -->
-      <div data-category="life" class="tool-card cursor-not-allowed opacity-75 bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden select-none flex flex-col justify-between">
-        <div class="absolute top-0 right-0 bg-amber-500 text-slate-950 text-[9px] font-black px-2.5 py-0.5 rounded-bl-lg">更新中</div>
-        <div class="absolute -right-6 -top-6 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
-        
+      <!-- 全部入り多機能計算機（クリックで ./number/calc/calc.html へ移動！） -->
+      <a href="./number/calc/calc.html" data-category="life" class="tool-card bg-slate-900/90 backdrop-blur-sm border border-slate-800 hover:border-amber-500/60 hover:-translate-y-1 rounded-2xl p-5 transition-all duration-300 shadow-lg hover:shadow-amber-500/15 group flex flex-col justify-between relative overflow-hidden">
+        <div class="absolute top-0 right-0 bg-amber-500 text-slate-950 text-[9px] font-black px-2.5 py-0.5 rounded-bl-lg">NEW</div>
+        <div class="absolute -right-6 -top-6 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all pointer-events-none"></div>
+
         <div class="relative z-10">
-          <div class="flex items-center gap-3 mb-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/25 to-purple-500/10 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0 shadow-inner">
-              <i data-lucide="calculator" class="w-5 h-5"></i>
+          <div class="flex items-center justify-between mb-3 pr-6">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/25 to-purple-500/10 border border-amber-500/40 flex items-center justify-center text-amber-400 group-hover:scale-110 transition shrink-0 shadow-inner">
+                <i data-lucide="calculator" class="w-5 h-5"></i>
+              </div>
+              <div class="min-w-0">
+                <h2 class="text-sm font-bold text-white group-hover:text-amber-400 transition truncate">全部入り多機能計算機</h2>
+                <span class="text-[10px] text-slate-400 font-mono block truncate">number/calc/calc.html</span>
+              </div>
             </div>
-            <div class="min-w-0 pr-8">
-              <h2 class="text-sm font-bold text-white truncate">全部入り多機能計算機</h2>
-              <span class="text-[10px] text-slate-400 font-mono block truncate">number/calc/calc.html (準備中)</span>
-            </div>
+            <i data-lucide="arrow-up-right" class="w-4 h-4 text-slate-600 group-hover:text-amber-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0"></i>
           </div>
-          <p class="text-xs text-slate-400 leading-relaxed">
-            √、π、累乗などあらゆる数式をグリグリ計算できる本格派マルチ電卓だべさ！🧮✨
+          <p class="text-xs text-slate-400 leading-relaxed group-hover:text-slate-300 transition">
+            √、π、累乗、三角関数まであらゆる数式をグリグリ計算！メモリー履歴＆LocalStorage対応だべさ！🧮✨
           </p>
         </div>
         <div class="mt-4 pt-3 border-t border-slate-800/60 flex items-center gap-1.5 relative z-10">
           <span class="text-[10px] px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-300 font-medium">生活・実用</span>
         </div>
-      </div>
+      </a>
 
     </div>
 
@@ -298,10 +299,10 @@
 
   <!-- フッター -->
   <footer class="mt-12 text-center text-xs text-slate-500 border-t border-slate-900 pt-5 relative z-10">
-    <a 
-      href="https://github.com/ykun-penteam0208/calc-tool" 
-      target="_blank" 
-      rel="noopener noreferrer" 
+    <a
+      href="https://github.com/ykun-penteam0208/calc-tool"
+      target="_blank"
+      rel="noopener noreferrer"
       class="inline-flex items-center justify-center gap-2 text-slate-400 no-underline hover:text-white transition-colors px-4 py-2 rounded-full hover:bg-slate-900"
     >
       <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24" aria-hidden="true">
@@ -333,7 +334,7 @@
         cards.forEach(card => {
           const category = card.getAttribute('data-category');
           const text = card.textContent.toLowerCase();
-          
+
           const matchesCategory = (currentCategory === 'all' || category === currentCategory);
           const matchesSearch = text.includes(query);
 
