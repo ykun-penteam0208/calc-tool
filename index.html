@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>計算ツール ポータル</title>
+  <title>Ykun Tool Portal | 総合ツール置き場</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -19,144 +19,229 @@
         }
       }
     };
-    window.addEventListener('DOMContentLoaded', () => {
-      if (window.lucide && typeof window.lucide.createIcons === 'function') {
-        window.lucide.createIcons();
-      }
-    });
   </script>
+  <style>
+    /* 背景の微細なグリッド模様 */
+    .bg-grid-pattern {
+      background-image: 
+        linear-gradient(to right, rgba(99, 102, 241, 0.06) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(99, 102, 241, 0.06) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+    /* カードの滑らかな登場アニメーション */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .tool-card {
+      animation: fadeUp 0.4s ease-out forwards;
+    }
+  </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between antialiased p-4 sm:p-8">
+<body class="bg-slate-950 bg-grid-pattern text-slate-100 min-h-screen flex flex-col justify-between antialiased p-4 sm:p-8 relative overflow-x-hidden">
 
-  <div class="max-w-5xl w-full mx-auto flex-grow flex flex-col justify-center">
+  <!-- 背景のネオンオーラ装飾 -->
+  <div class="fixed top-[-10%] left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-indigo-600/15 rounded-full blur-[120px] pointer-events-none"></div>
+  <div class="fixed bottom-[-10%] right-[-5%] w-[400px] h-[300px] bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+
+  <div class="max-w-5xl w-full mx-auto flex-grow flex flex-col justify-center relative z-10">
+    
     <!-- ヘッダー -->
-    <header class="text-center mb-10">
-      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/25 text-indigo-300 text-xs font-medium mb-3">
-        <i data-lucide="compass" class="w-3.5 h-3.5 text-indigo-400"></i>
-        <span>計算ツール総合ポータル</span>
+    <header class="text-center mb-8">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/80 border border-indigo-500/30 text-indigo-300 text-xs font-medium mb-4 shadow-sm backdrop-blur-md">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="font-mono tracking-wider uppercase text-[11px]">All-in-One Web Utilities</span>
       </div>
-      <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-white mb-2">
-        計算ツール置き場 🧮✨
+      
+      <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight mb-3 bg-gradient-to-r from-white via-indigo-200 to-cyan-300 bg-clip-text text-transparent">
+        Ykun Tool Portal 🛠️✨
       </h1>
-      <p class="text-slate-400 text-sm sm:text-base max-w-xl mx-auto">
-        自慢の数学シミュレーターや計算ツールへ、ここから一発でアクセスできるぞい！
+      
+      <p class="text-slate-400 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
+        計算・数学シミュレーターから日常の便利ユーティリティまで、自作Webツールへここから一発アクセスだべ！🚀
       </p>
     </header>
 
+    <!-- 検索＆カテゴリフィルターバー -->
+    <div class="mb-8 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-900/70 backdrop-blur-md border border-slate-800/80 p-3 rounded-2xl shadow-xl">
+      
+      <!-- カテゴリタブ -->
+      <div class="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 w-full sm:w-auto" id="category-tabs">
+        <button data-filter="all" class="filter-btn active px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all bg-indigo-600 text-white shadow-md shadow-indigo-500/20">
+          すべて (<span id="count-all">8</span>)
+        </button>
+        <button data-filter="math" class="filter-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all text-slate-400 hover:text-white hover:bg-slate-800">
+          図形・数学
+        </button>
+        <button data-filter="number" class="filter-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all text-slate-400 hover:text-white hover:bg-slate-800">
+          数値・変換
+        </button>
+        <button data-filter="life" class="filter-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all text-slate-400 hover:text-white hover:bg-slate-800">
+          生活・実用
+        </button>
+      </div>
+
+      <!-- リアルタイム検索窓 -->
+      <div class="relative w-full sm:w-64">
+        <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+        <input 
+          type="text" 
+          id="tool-search" 
+          placeholder="ツール名やキーワードで検索..." 
+          class="w-full bg-slate-950/90 border border-slate-800 focus:border-indigo-500 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-100 placeholder-slate-500 outline-none transition-colors"
+        >
+      </div>
+    </div>
+
     <!-- ツール一覧グリッド -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div id="tools-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       
       <!-- バビロニア法 平方根シミュレーター -->
-      <a href="./shape/square/squareroot/sqrt-1.html" class="bg-slate-900 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-5 transition-all shadow-lg hover:shadow-indigo-500/10 group flex flex-col justify-between">
+      <a href="./shape/square/squareroot/sqrt-1.html" data-category="math" class="tool-card bg-slate-900/90 backdrop-blur-sm border border-slate-800 hover:border-indigo-500/60 hover:-translate-y-1 rounded-2xl p-5 transition-all duration-300 shadow-lg hover:shadow-indigo-500/15 group flex flex-col justify-between">
         <div>
-          <div class="flex items-center gap-3 mb-3">
-            <div class="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition shrink-0">
-              <i data-lucide="square-radical" class="w-5 h-5"></i>
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition shrink-0">
+                <i data-lucide="square-radical" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h2 class="text-sm font-bold text-white group-hover:text-indigo-400 transition">バビロニア法 平方根</h2>
+                <span class="text-[10px] text-slate-400 font-mono">squareroot/</span>
+              </div>
             </div>
-            <div>
-              <h2 class="text-sm font-bold text-white group-hover:text-indigo-400 transition">バビロニア法 平方根</h2>
-              <span class="text-[10px] text-slate-400 font-mono">squareroot/</span>
-            </div>
+            <i data-lucide="arrow-up-right" class="w-4 h-4 text-slate-600 group-hover:text-indigo-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all"></i>
           </div>
           <p class="text-xs text-slate-400 leading-relaxed">
             「割る・足す・2で割る」の3ステップで真の平方根に吸い寄せられる様子を可視化！
           </p>
         </div>
+        <div class="mt-4 pt-3 border-t border-slate-800/60 flex items-center gap-1.5">
+          <span class="text-[10px] px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-300 font-medium">図形・数学</span>
+        </div>
       </a>
 
       <!-- 三平方の定理ビジュアライザー -->
-      <a href="./shape/triangle/pythagoras.html" class="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 rounded-2xl p-5 transition-all shadow-lg hover:shadow-emerald-500/10 group flex flex-col justify-between">
+      <a href="./shape/triangle/pythagoras.html" data-category="math" class="tool-card bg-slate-900/90 backdrop-blur-sm border border-slate-800 hover:border-emerald-500/60 hover:-translate-y-1 rounded-2xl p-5 transition-all duration-300 shadow-lg hover:shadow-emerald-500/15 group flex flex-col justify-between">
         <div>
-          <div class="flex items-center gap-3 mb-3">
-            <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition shrink-0">
-              <i data-lucide="triangle" class="w-5 h-5"></i>
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition shrink-0">
+                <i data-lucide="triangle" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h2 class="text-sm font-bold text-white group-hover:text-emerald-400 transition">三平方の定理</h2>
+                <span class="text-[10px] text-slate-400 font-mono">shape/triangle/</span>
+              </div>
             </div>
-            <div>
-              <h2 class="text-sm font-bold text-white group-hover:text-emerald-400 transition">三平方の定理</h2>
-              <span class="text-[10px] text-slate-400 font-mono">shape/triangle/</span>
-            </div>
+            <i data-lucide="arrow-up-right" class="w-4 h-4 text-slate-600 group-hover:text-emerald-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all"></i>
           </div>
           <p class="text-xs text-slate-400 leading-relaxed">
             直角三角形の斜辺を直感で計算！入力値に連動して図形がなめらかにアニメーション変形。
           </p>
         </div>
+        <div class="mt-4 pt-3 border-t border-slate-800/60 flex items-center gap-1.5">
+          <span class="text-[10px] px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-300 font-medium">図形・数学</span>
+        </div>
       </a>
 
       <!-- 正三角形アナライザー (NEW!) -->
-      <a href="./shape/triangle/equilateral.html" class="bg-slate-900 border border-slate-800 hover:border-cyan-400/50 rounded-2xl p-5 transition-all shadow-lg hover:shadow-cyan-400/10 group flex flex-col justify-between relative overflow-hidden">
+      <a href="./shape/triangle/equilateral.html" data-category="math" class="tool-card bg-slate-900/90 backdrop-blur-sm border border-slate-800 hover:border-cyan-400/60 hover:-translate-y-1 rounded-2xl p-5 transition-all duration-300 shadow-lg hover:shadow-cyan-400/15 group flex flex-col justify-between relative overflow-hidden">
         <div class="absolute top-0 right-0 bg-cyan-500 text-slate-950 text-[9px] font-black px-2.5 py-0.5 rounded-bl-lg">NEW</div>
         <div>
-          <div class="flex items-center gap-3 mb-3">
-            <div class="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition shrink-0">
-              <i data-lucide="maximize-2" class="w-5 h-5"></i>
-            </div>
-            <div>
-              <h2 class="text-sm font-bold text-white group-hover:text-cyan-400 transition">正三角形アナライザー</h2>
-              <span class="text-[10px] text-slate-400 font-mono">shape/triangle/</span>
+          <div class="flex items-center justify-between mb-3 pr-6">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition shrink-0">
+                <i data-lucide="maximize-2" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h2 class="text-sm font-bold text-white group-hover:text-cyan-400 transition">正三角形アナライザー</h2>
+                <span class="text-[10px] text-slate-400 font-mono">shape/triangle/</span>
+              </div>
             </div>
           </div>
           <p class="text-xs text-slate-400 leading-relaxed">
             1辺から高さを求めたり、高さから1辺を逆算！スムーズなアニメーション描画付き。
           </p>
         </div>
+        <div class="mt-4 pt-3 border-t border-slate-800/60 flex items-center gap-1.5">
+          <span class="text-[10px] px-2 py-0.5 rounded-md bg-cyan-500/10 text-cyan-300 font-medium">図形・数学</span>
+        </div>
       </a>
 
       <!-- ネオンパイ・オデッセイ -->
-      <a href="./shape/circ/pi/neon_pi_odyssey.html" class="bg-slate-900 border border-slate-800 hover:border-cyan-500/50 rounded-2xl p-5 transition-all shadow-lg hover:shadow-cyan-500/10 group flex flex-col justify-between">
+      <a href="./shape/circ/pi/neon_pi_odyssey.html" data-category="math" class="tool-card bg-slate-900/90 backdrop-blur-sm border border-slate-800 hover:border-cyan-500/60 hover:-translate-y-1 rounded-2xl p-5 transition-all duration-300 shadow-lg hover:shadow-cyan-500/15 group flex flex-col justify-between">
         <div>
-          <div class="flex items-center gap-3 mb-3">
-            <div class="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition shrink-0">
-              <i data-lucide="sparkles" class="w-5 h-5"></i>
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition shrink-0">
+                <i data-lucide="sparkles" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h2 class="text-sm font-bold text-white group-hover:text-cyan-400 transition">ネオンパイ・オデッセイ</h2>
+                <span class="text-[10px] text-slate-400 font-mono">shape/circ/pi/</span>
+              </div>
             </div>
-            <div>
-              <h2 class="text-sm font-bold text-white group-hover:text-cyan-400 transition">ネオンパイ・オデッセイ</h2>
-              <span class="text-[10px] text-slate-400 font-mono">shape/circ/pi/</span>
-            </div>
+            <i data-lucide="arrow-up-right" class="w-4 h-4 text-slate-600 group-hover:text-cyan-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all"></i>
           </div>
           <p class="text-xs text-slate-400 leading-relaxed">
             円周率やパイにまつわるパズルのシミュレーターツール！
           </p>
         </div>
+        <div class="mt-4 pt-3 border-t border-slate-800/60 flex items-center gap-1.5">
+          <span class="text-[10px] px-2 py-0.5 rounded-md bg-cyan-500/10 text-cyan-300 font-medium">図形・数学</span>
+        </div>
       </a>
 
       <!-- 進数変換コンバーター -->
-      <a href="./number/base/base.html" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-5 transition-all shadow-lg hover:shadow-amber-500/10 group flex flex-col justify-between">
+      <a href="./number/base/base.html" data-category="number" class="tool-card bg-slate-900/90 backdrop-blur-sm border border-slate-800 hover:border-amber-500/60 hover:-translate-y-1 rounded-2xl p-5 transition-all duration-300 shadow-lg hover:shadow-amber-500/15 group flex flex-col justify-between">
         <div>
-          <div class="flex items-center gap-3 mb-3">
-            <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:scale-110 transition shrink-0">
-              <i data-lucide="binary" class="w-5 h-5"></i>
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:scale-110 transition shrink-0">
+                <i data-lucide="binary" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h2 class="text-sm font-bold text-white group-hover:text-amber-400 transition">進数変換コンバーター</h2>
+                <span class="text-[10px] text-slate-400 font-mono">number/base/</span>
+              </div>
             </div>
-            <div>
-              <h2 class="text-sm font-bold text-white group-hover:text-amber-400 transition">進数変換コンバーター</h2>
-              <span class="text-[10px] text-slate-400 font-mono">number/base/</span>
-            </div>
+            <i data-lucide="arrow-up-right" class="w-4 h-4 text-slate-600 group-hover:text-amber-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all"></i>
           </div>
           <p class="text-xs text-slate-400 leading-relaxed">
             2〜36進数を自由に行き来できる便利な数値変換ツール！
           </p>
         </div>
+        <div class="mt-4 pt-3 border-t border-slate-800/60 flex items-center gap-1.5">
+          <span class="text-[10px] px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-300 font-medium">数値・変換</span>
+        </div>
       </a>
 
       <!-- 素数ロケーター -->
-      <a href="./number/prime/look.html" class="bg-slate-900 border border-slate-800 hover:border-cyan-500/50 rounded-2xl p-5 transition-all shadow-lg hover:shadow-cyan-500/10 group flex flex-col justify-between">
+      <a href="./number/prime/look.html" data-category="number" class="tool-card bg-slate-900/90 backdrop-blur-sm border border-slate-800 hover:border-purple-500/60 hover:-translate-y-1 rounded-2xl p-5 transition-all duration-300 shadow-lg hover:shadow-purple-500/15 group flex flex-col justify-between">
         <div>
-          <div class="flex items-center gap-3 mb-3">
-            <div class="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition shrink-0">
-              <i data-lucide="search" class="w-5 h-5"></i>
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400 group-hover:scale-110 transition shrink-0">
+                <i data-lucide="radar" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h2 class="text-sm font-bold text-white group-hover:text-purple-400 transition">素数ロケーター</h2>
+                <span class="text-[10px] text-slate-400 font-mono">number/prime/</span>
+              </div>
             </div>
-            <div>
-              <h2 class="text-sm font-bold text-white group-hover:text-cyan-400 transition">素数ロケーター</h2>
-              <span class="text-[10px] text-slate-400 font-mono">number/prime/</span>
-            </div>
+            <i data-lucide="arrow-up-right" class="w-4 h-4 text-slate-600 group-hover:text-purple-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all"></i>
           </div>
           <p class="text-xs text-slate-400 leading-relaxed">
             指定した数の近くにある素数や、N番目の素数を一瞬で探せるシミュレーターだべ！
           </p>
         </div>
+        <div class="mt-4 pt-3 border-t border-slate-800/60 flex items-center gap-1.5">
+          <span class="text-[10px] px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-300 font-medium">数値・変換</span>
+        </div>
       </a>
 
       <!-- お買い物値段計算ツール -->
-      <a href="./number/calc/store.html" class="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 rounded-2xl p-5 transition-all shadow-lg hover:shadow-emerald-500/15 group flex flex-col justify-between relative overflow-hidden">
+      <a href="./number/calc/store.html" data-category="life" class="tool-card bg-slate-900/90 backdrop-blur-sm border border-slate-800 hover:border-emerald-500/60 hover:-translate-y-1 rounded-2xl p-5 transition-all duration-300 shadow-lg hover:shadow-emerald-500/15 group flex flex-col justify-between relative overflow-hidden">
         <div class="absolute top-0 right-0 bg-emerald-500 text-slate-950 text-[9px] font-black px-2.5 py-0.5 rounded-bl-lg">津軽弁</div>
         <div class="absolute -right-6 -top-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all pointer-events-none"></div>
         <div class="relative z-10">
@@ -164,7 +249,7 @@
             <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/25 to-teal-500/10 border border-emerald-500/40 flex items-center justify-center text-emerald-400 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shrink-0 shadow-inner">
               <i data-lucide="shopping-cart" class="w-5 h-5"></i>
             </div>
-            <div class="min-w-0 pr-6">
+            <div class="min-w-0 pr-8">
               <h2 class="text-sm font-bold text-white group-hover:text-emerald-400 transition truncate">お買い物値段計算</h2>
               <span class="text-[10px] text-slate-400 font-mono block truncate">number/calc/</span>
             </div>
@@ -173,47 +258,112 @@
             半額シールや割引・税率もワンタップで即計算！カゴに入れる感覚で合計金額をサクッとチェックできる買い物電卓だべさ🍎
           </p>
         </div>
+        <div class="mt-4 pt-3 border-t border-slate-800/60 flex items-center gap-1.5 relative z-10">
+          <span class="text-[10px] px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-300 font-medium">生活・実用</span>
+        </div>
       </a>
 
-      <!-- 全部入り多機能計算機 (NEW!) -->
-      <div class="cursor-not-allowed opacity-75 bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden select-none">
-  <!-- 更新中バッジ -->
-  <div class="absolute top-0 right-0 bg-amber-500 text-slate-950 text-[9px] font-black px-2.5 py-0.5 rounded-bl-lg">更新中</div>
-  
-  <!-- 光るエフェクト（ホバーで動かないようにgroupクラスも削除） -->
-  <div class="absolute -right-6 -top-6 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
-  
-  <div class="relative z-10">
-    <div class="flex items-center gap-3 mb-3">
-      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/25 to-purple-500/10 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0 shadow-inner">
-        <i data-lucide="calculator" class="w-5 h-5"></i>
+      <!-- 全部入り多機能計算機 (更新中) -->
+      <div data-category="life" class="tool-card cursor-not-allowed opacity-75 bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden select-none flex flex-col justify-between">
+        <div class="absolute top-0 right-0 bg-amber-500 text-slate-950 text-[9px] font-black px-2.5 py-0.5 rounded-bl-lg">更新中</div>
+        <div class="absolute -right-6 -top-6 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
+        
+        <div class="relative z-10">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/25 to-purple-500/10 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0 shadow-inner">
+              <i data-lucide="calculator" class="w-5 h-5"></i>
+            </div>
+            <div class="min-w-0 pr-8">
+              <h2 class="text-sm font-bold text-white truncate">全部入り多機能計算機</h2>
+              <span class="text-[10px] text-slate-400 font-mono block truncate">number/calc/calc.html (準備中)</span>
+            </div>
+          </div>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            √、π、累乗などあらゆる数式をグリグリ計算できる本格派マルチ電卓だべさ！🧮✨
+          </p>
+        </div>
+        <div class="mt-4 pt-3 border-t border-slate-800/60 flex items-center gap-1.5 relative z-10">
+          <span class="text-[10px] px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-300 font-medium">生活・実用</span>
+        </div>
       </div>
-      <div class="min-w-0 pr-6">
-        <h2 class="text-sm font-bold text-white truncate">全部入り多機能計算機</h2>
-        <span class="text-[10px] text-slate-400 font-mono block truncate">number/calc/calc.html (準備中)</span>
-      </div>
-    </div>
-    <p class="text-xs text-slate-400 leading-relaxed">
-      √、π、累乗などあらゆる数式をグリグリ計算できる本格派マルチ電卓だべさ！🧮✨
-    </p>
-  </div>
-</div>
 
     </div>
+
+    <!-- 検索ヒットなし時の表示 -->
+    <div id="empty-state" class="hidden text-center py-12">
+      <p class="text-slate-400 text-sm">一致するツールが見つからねがったじゃ〜💦 別の言葉で探してみてけれな！🔍</p>
+    </div>
+
   </div>
 
-  <footer class="mt-12 text-center text-xs text-slate-500 border-t border-slate-900 pt-4">
-  <a 
-    href="https://github.com/ykun-penteam0208/calc-tool" 
-    target="_blank" 
-    rel="noopener noreferrer" 
-    class="inline-flex items-center justify-center gap-1.5 text-slate-500 no-underline hover:text-slate-300 transition-colors"
-  >
-    <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24" aria-hidden="true">
-      <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
-    </svg>
-    <span>GitHub Pages Calculation Tools Portal</span>
-  </a>
-</footer>
+  <!-- フッター -->
+  <footer class="mt-12 text-center text-xs text-slate-500 border-t border-slate-900 pt-5 relative z-10">
+    <a 
+      href="https://github.com/ykun-penteam0208/calc-tool" 
+      target="_blank" 
+      rel="noopener noreferrer" 
+      class="inline-flex items-center justify-center gap-2 text-slate-400 no-underline hover:text-white transition-colors px-4 py-2 rounded-full hover:bg-slate-900"
+    >
+      <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+      </svg>
+      <span class="font-mono">Ykun Tool Portal on GitHub</span>
+    </a>
+  </footer>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        window.lucide.createIcons();
+      }
+
+      const filterBtns = document.querySelectorAll('.filter-btn');
+      const cards = document.querySelectorAll('.tool-card');
+      const searchInput = document.getElementById('tool-search');
+      const emptyState = document.getElementById('empty-state');
+      const countAll = document.getElementById('count-all');
+
+      let currentCategory = 'all';
+      countAll.textContent = cards.length;
+
+      function filterTools() {
+        const query = searchInput.value.toLowerCase().trim();
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+          const category = card.getAttribute('data-category');
+          const text = card.textContent.toLowerCase();
+          
+          const matchesCategory = (currentCategory === 'all' || category === currentCategory);
+          const matchesSearch = text.includes(query);
+
+          if (matchesCategory && matchesSearch) {
+            card.style.display = 'flex';
+            visibleCount++;
+          } else {
+            card.style.display = 'none';
+          }
+        });
+
+        emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
+      }
+
+      filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          filterBtns.forEach(b => {
+            b.classList.remove('active', 'bg-indigo-600', 'text-white', 'shadow-md', 'shadow-indigo-500/20');
+            b.classList.add('text-slate-400', 'hover:text-white', 'hover:bg-slate-800');
+          });
+          btn.classList.add('active', 'bg-indigo-600', 'text-white', 'shadow-md', 'shadow-indigo-500/20');
+          btn.classList.remove('text-slate-400', 'hover:text-white', 'hover:bg-slate-800');
+
+          currentCategory = btn.getAttribute('data-filter');
+          filterTools();
+        });
+      });
+
+      searchInput.addEventListener('input', filterTools);
+    });
+  </script>
 </body>
 </html>
