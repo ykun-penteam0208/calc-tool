@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="ja" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>数式ソルバー・ジェネレーター | Formula Builder</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body {
+      background-color: #05070c;
+      color: #f1f5f9;
+      background-image:
+        linear-gradient(to right, rgba(56, 189, 248, 0.07) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(56, 189, 248, 0.07) 1px, transparent 1px),
+        linear-gradient(to right, rgba(148, 163, 184, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(148, 163, 184, 0.04) 1px, transparent 1px);
+      background-size: 96px 96px, 96px 96px, 24px 24px, 24px 24px;
+      background-position: -1px -1px;
+    }
+  </style>
+</head>
+<body class="min-h-screen antialiased selection:bg-cyan-500/30 selection:text-cyan-200">
+  <div class="relative min-h-screen flex flex-col">
+    <!-- Top Bar -->
+    <header class="sticky top-0 z-20 border-b border-slate-800/80 bg-[#05070c]/85 backdrop-blur-md">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+        <a
+          href="./index.html"
+          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-700/80 bg-slate-900/80 text-slate-200 hover:text-cyan-300 hover:border-cyan-500/50 transition text-sm font-medium shrink-0"
+          aria-label="ルートの index.html に戻る"
+        >
+          <i data-lucide="arrow-left" class="w-4 h-4 text-cyan-400"></i>
+          <span>index.html</span>
+        </a>
+
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shrink-0">
+            <i data-lucide="calculator" class="w-4 h-4"></i>
+          </div>
+          <h1 class="text-sm sm:text-base font-semibold tracking-tight text-slate-100 truncate">
+            AUTO FORMULA BUILDER
+          </h1>
+        </div>
+
+        <div class="w-20 sm:w-28 flex justify-end">
+          <span class="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-mono text-emerald-400/90 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            READY
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-8 space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <!-- Left Column: Inputs & Rule Checkboxes -->
+        <section class="lg:col-span-5 space-y-6">
+          <div class="rounded-2xl border border-slate-800/90 bg-slate-950/80 backdrop-blur-sm p-5 sm:p-6 shadow-2xl space-y-5">
+            <div class="flex items-center justify-between border-b border-slate-800/80 pb-3.5">
+              <div class="flex items-center gap-2">
+                <i data-lucide="sliders-horizontal" class="w-4 h-4 text-cyan-400"></i>
+                <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-200">ターゲット＆数字設定</h2>
+              </div>
+              <button
+                id="presetBtn"
+                type="button"
+                class="inline-flex items-center gap-1 text-xs font-mono text-cyan-400 hover:text-cyan-300 transition"
+              >
+                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                <span>サンプル読込</span>
+              </button>
+            </div>
+
+            <div class="space-y-2">
+              <label for="targetInput" class="block text-xs font-medium text-slate-300">
+                目標の値（整数・小数・分数表記 例: <span class="font-mono text-cyan-400">1015</span> / <span class="font-mono text-cyan-400">1/6</span>）
+              </label>
+              <input
+                id="targetInput"
+                type="text"
+                value="1015"
+                placeholder="例: 1015 または 1/6"
+                class="w-full rounded-xl border border-slate-700/80 bg-slate-900/90 px-3.5 py-2.5 font-mono text-base text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 transition"
+              />
+            </div>
+
+            <div class="space-y-2">
+              <label for="digitsInput" class="block text-xs font-medium text-slate-300">
+                使用する数字プール（カンマ区切りまたは連続文字）
+              </label>
+              <input
+                id="digitsInput"
+                type="text"
+                value="1,2,3,4,5,6,7,8,9,0"
+                placeholder="例: 1,2,3,4,5,6,7,8,9,0"
+                class="w-full rounded-xl border border-slate-700/80 bg-slate-900/90 px-3.5 py-2.5 font-mono text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 transition"
+              />
+            </div>
+
+            <!-- Rule Checkboxes -->
+            <div class="space-y-3 pt-1">
+              <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <i data-lucide="check-square" class="w-3.5 h-3.5 text-cyan-400"></i>
+                <span>ルール変更（チェックボックス）</span>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <label class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-slate-700 cursor-pointer transition select-none">
+                  <input id="ruleUseAll" type="checkbox" checked class="w-4 h-4 rounded accent-cyan-400 bg-slate-800 border-slate-600" />
+                  <span class="text-xs font-medium text-slate-200">全数字を1回ずつ使う</span>
+                </label>
+
+                <label class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-slate-700 cursor-pointer transition select-none">
+                  <input id="ruleAllowOrderChange" type="checkbox" checked class="w-4 h-4 rounded accent-cyan-400 bg-slate-800 border-slate-600" />
+                  <span class="text-xs font-medium text-slate-200">数字の順番変更OK</span>
+                </label>
+
+                <label class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-slate-700 cursor-pointer transition select-none">
+                  <input id="ruleAllowConcat" type="checkbox" checked class="w-4 h-4 rounded accent-cyan-400 bg-slate-800 border-slate-600" />
+                  <span class="text-xs font-medium text-slate-200">桁の連結（12, 890等）</span>
+                </label>
+
+                <label class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-slate-700 cursor-pointer transition select-none">
+                  <input id="ruleAllowParens" type="checkbox" checked class="w-4 h-4 rounded accent-cyan-400 bg-slate-800 border-slate-600" />
+                  <span class="text-xs font-medium text-slate-200">カッコ ( ) 使用OK</span>
+                </label>
+
+                <label class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-slate-700 cursor-pointer transition select-none">
+                  <input id="ruleAllowPower" type="checkbox" checked class="w-4 h-4 rounded accent-cyan-400 bg-slate-800 border-slate-600" />
+                  <span class="text-xs font-medium text-slate-200">累乗 ( ^ ) を使う</span>
+                </label>
+
+                <label class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-slate-700 cursor-pointer transition select-none">
+                  <input id="ruleAllowFactorial" type="checkbox" checked class="w-4 h-4 rounded accent-cyan-400 bg-slate-800 border-slate-600" />
+                  <span class="text-xs font-medium text-slate-200">階乗 ( ! ) を使う</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="pt-2 flex items-center gap-3">
+              <button
+                id="generateBtn"
+                type="button"
+                class="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 active:bg-cyan-500 text-slate-950 font-semibold text-sm py-3 px-4 shadow-lg shadow-cyan-500/20 transition cursor-pointer"
+              >
+                <i data-lucide="play" class="w-4 h-4 fill-current"></i>
+                <span>式を自動生成する</span>
+              </button>
+
+              <button
+                id="stopBtn"
+                type="button"
+                disabled
+                class="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900 hover:bg-slate-800 disabled:opacity-40 disabled:pointer-events-none text-slate-200 font-medium text-sm py-3 px-3.5 transition cursor-pointer"
+                title="探索停止"
+              >
+                <i data-lucide="square" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Right Column: Result & Steps -->
+        <section class="lg:col-span-7 space-y-6">
+          <div class="rounded-2xl border border-slate-800/90 bg-slate-950/80 backdrop-blur-sm p-5 sm:p-6 shadow-2xl space-y-5">
+            <div class="flex items-center justify-between border-b border-slate-800/80 pb-3.5">
+              <div class="flex items-center gap-2">
+                <i data-lucide="terminal" class="w-4 h-4 text-cyan-400"></i>
+                <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-200">生成された数式</h2>
+              </div>
+              <span id="statusBadge" class="text-xs font-mono px-2.5 py-1 rounded-md bg-slate-900 text-slate-400 border border-slate-800">
+                待機中
+              </span>
+            </div>
+
+            <div id="resultBox" class="rounded-xl border border-slate-800 bg-[#070b12] p-5 min-h-[140px] flex flex-col justify-between gap-4">
+              <div class="flex items-start justify-between gap-3">
+                <div id="formulaOutput" class="font-mono text-lg sm:text-2xl font-semibold text-cyan-300 break-all leading-relaxed">
+                  式を生成してください
+                </div>
+                <button
+                  id="copyBtn"
+                  type="button"
+                  class="inline-flex items-center gap-1.5 rounded-lg border border-slate-700/80 bg-slate-900/90 hover:border-cyan-500/50 hover:text-cyan-300 text-slate-300 text-xs font-mono px-2.5 py-1.5 shrink-0 transition cursor-pointer"
+                >
+                  <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                  <span id="copyLabel">コピー</span>
+                </button>
+              </div>
+
+              <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-800/70 text-xs font-mono text-slate-400">
+                <div id="evalInfo">評価値: --</div>
+                <div id="statsInfo">試行: 0 / 経過: 0ms</div>
+              </div>
+            </div>
+
+            <!-- Candidates List -->
+            <div class="space-y-2.5">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                  <i data-lucide="list-checks" class="w-3.5 h-3.5 text-cyan-400"></i>
+                  <span>見つかった候補一覧</span>
+                </span>
+                <span id="candidateCount" class="text-xs font-mono text-slate-500">0 件</span>
+              </div>
+              <div id="candidatesList" class="space-y-2 max-h-72 overflow-y-auto pr-1">
+                <div class="rounded-xl border border-dashed border-slate-800 bg-slate-900/30 p-4 text-center text-xs text-slate-500">
+                  「式を自動生成する」を押すと一致した数式がここに表示されます。
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    const $ = (id) => document.getElementById(id);
+
+    const presets = [
+      { target: '1015', digits: '1,2,3,4,5,6,7,8,9,0' },
+      { target: '1010', digits: '1,2,3,4,5,6,7,8,9,0' },
+      { target: '1005', digits: '1,2,3,4,5,6,7,8,9,0' },
+      { target: '2026', digits: '1,2,3,4,5,6,7,8,9,0' },
+      { target: '1/6',  digits: '1,2,3,4,5,6,7,8,9,0' },
+    ];
+    let presetIdx = 0;
+
+    let abortFlag = false;
+    let isRunning = false;
+
+    $('presetBtn').addEventListener('click', () => {
+      const p = presets[presetIdx % presets.length];
+      $('targetInput').value = p.target;
+      $('digitsInput').value = p.digits;
+      presetIdx++;
+    });
+
+    $('copyBtn').addEventListener('click', async () => {
+      const text = $('formulaOutput').textContent.trim();
+      if (!text || text === '式を生成してください') return;
+      try {
+        await navigator.clipboard.writeText(text);
+        $('copyLabel').textContent = 'コピー済';
+        setTimeout(() => { $('copyLabel').textContent = 'コピー'; }, 1400);
+      } catch (_) {}
+    });
+
+    $('stopBtn').addEventListener('click', () => {
+      abortFlag = true;
+    });
+
+    function parseTargetValue(raw) {
+      const s = raw.trim().replace(/\s+/g, '');
+      if (!s) return null;
+      const fracMatch = s.match(/^([+-]?\d+(?:\.\d+)?)\/([+-]?\d+(?:\.\d+)?)$/);
+      if (fracMatch) {
+        const num = parseFloat(fracMatch[1]);
+        const den = parseFloat(fracMatch[2]);
+        if (!Number.isFinite(num) || !Number.isFinite(den) || den === 0) return null;
+        return num / den;
+      }
+      try {
+        if (!/^[0-9+\-*/().^\s]+$/.test(s)) return null;
+        const jsExpr = s.replace(/\^/g, '**');
+        const val = Function(`"use strict"; return (${jsExpr});`)();
+        return typeof val === 'number' && Number.isFinite(val) ? val : null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function parseDigits(raw) {
+      const cleaned = raw.trim();
+      if (!cleaned) return [];
+      if (cleaned.includes(',')) {
+        return cleaned.split(',').map((x) => x.trim()).filter((x) => x.length > 0);
+      }
+      return cleaned.replace(/\s+/g, '').split('');
+    }
+
+    function factorial(n) {
+      if (!Number.isInteger(n) || n < 0 || n > 7) return null;
+      let r = 1;
+      for (let i = 2; i <= n; i++) r *= i;
+      return r;
+    }
+
+    function getPermutations(arr, maxCount = 5040) {
+      const results = [];
+      const used = new Array(arr.length).fill(false);
+      const path = [];
+      function dfs() {
+        if (results.length >= maxCount) return;
+        if (path.length === arr.length) {
+          results.push([...path]);
+          return;
+        }
+        for (let i = 0; i < arr.length; i++) {
+          if (used[i]) continue;
+          if (i > 0 && arr[i] === arr[i - 1] && !used[i - 1]) continue;
+          used[i] = true;
+          path.push(arr[i]);
+          dfs();
+          path.pop();
+          used[i] = false;
+        }
+      }
+      dfs();
+      return results;
+    }
+
+    function getSubsets(arr) {
+      const out = [];
+      const total = 1 << arr.length;
+      for (let mask = 1; mask < total; mask++) {
+        const sub = [];
+        for (let i = 0; i < arr.length; i++) {
+          if ((mask >> i) & 1) sub.push(arr[i]);
+        }
+        out.push(sub);
+      }
+      out.sort((a, b) => b.length - a.length);
+      return out;
+    }
+
+    function getConcatSplits(seq, allowConcat) {
+      if (!allowConcat) {
+        for (const token of seq) {
+          if (!/^[+-]?\d+(\.\d+)?$/.test(token)) return [];
+        }
+        return [seq.map((t) => ({ val: Number(t), disp: t }))];
+      }
+      const splits = [];
+      function dfs(idx, acc) {
+        if (idx === seq.length) {
+          splits.push([...acc]);
+          return;
+        }
+        for (let end = idx + 1; end <= seq.length; end++) {
+          const piece = seq.slice(idx, end).join('');
+          if (/^\d+$/.test(piece)) {
+            if (piece.length > 1 && piece.startsWith('0')) continue;
+            acc.push({ val: Number(piece), disp: piece });
+            dfs(end, acc);
+            acc.pop();
+          } else if (end === idx + 1) {
+            const num = Number(piece);
+            if (Number.isFinite(num)) {
+              acc.push({ val: num, disp: piece });
+              dfs(end, acc);
+              acc.pop();
+            }
+          }
+        }
+      }
+      dfs(0, []);
+      return splits;
+    }
+
+    function getUnaryVariants(parts, allowFactorial) {
+      const listOfChoices = parts.map((p) => {
+        const opts = [{ val: p.val, disp: p.disp }];
+        if (allowFactorial && Number.isInteger(p.val) && p.val >= 1 && p.val <= 6) {
+          const f = factorial(p.val);
+          if (f !== null) {
+            opts.push({ val: f, disp: `${p.disp}!` });
+          }
+        }
+        return opts;
+      });
+
+      const combos = [];
+      function dfs(i, cur) {
+        if (combos.length > 256) return;
+        if (i === listOfChoices.length) {
+          combos.push([...cur]);
+          return;
+        }
+        for (const opt of listOfChoices[i]) {
+          cur.push(opt);
+          dfs(i + 1, cur);
+          cur.pop();
+        }
+      }
+      dfs(0, []);
+      return combos;
+    }
+
+    function buildExpressions(nodes, allowParens, allowPower, maxResults = 6) {
+      const memo = new Map();
+
+      function solve(l, r) {
+        const key = `${l},${r}`;
+        if (memo.has(key)) return memo.get(key);
+        if (l === r) {
+          const base = [{ val: nodes[l].val, expr: nodes[l].disp, prec: 4 }];
+          memo.set(key, base);
+          return base;
+        }
+        const out = [];
+        for (let mid = l; mid < r; mid++) {
+          const leftList = solve(l, mid);
+          const rightList = solve(mid + 1, r);
+          for (const a of leftList) {
+            for (const b of rightList) {
+              if (!Number.isFinite(a.val) || !Number.isFinite(b.val)) continue;
+
+              const fmtSide = (side, opPrec, isRight, isPowBase = false) => {
+                const needsParen = isPowBase
+                  ? side.prec < 4
+                  : side.prec < opPrec || (isRight && side.prec === opPrec);
+                if (!needsParen) return side.expr;
+                return allowParens ? `(${side.expr})` : null;
+              };
+
+              // +
+              {
+                const eL = fmtSide(a, 1, false);
+                const eR = fmtSide(b, 1, true);
+                if (eL && eR) {
+                  out.push({ val: a.val + b.val, expr: `${eL} + ${eR}`, prec: 1 });
+                }
+              }
+              // -
+              {
+                const eL = fmtSide(a, 1, false);
+                const eR = fmtSide(b, 1, true);
+                if (eL && eR) {
+                  out.push({ val: a.val - b.val, expr: `${eL} - ${eR}`, prec: 1 });
+                }
+              }
+              // *
+              {
+                const eL = fmtSide(a, 2, false);
+                const eR = fmtSide(b, 2, true);
+                if (eL && eR) {
+                  out.push({ val: a.val * b.val, expr: `${eL} × ${eR}`, prec: 2 });
+                }
+              }
+              // /
+              if (Math.abs(b.val) > 1e-12) {
+                const eL = fmtSide(a, 2, false);
+                const eR = fmtSide(b, 2, true);
+                if (eL && eR) {
+                  out.push({ val: a.val / b.val, expr: `${eL} ÷ ${eR}`, prec: 2 });
+                }
+              }
+              // ^ (power)
+              if (allowPower && Math.abs(a.val) <= 25 && b.val >= -6 && b.val <= 6) {
+                const pw = Math.pow(a.val, b.val);
+                if (typeof pw === 'number' && Number.isFinite(pw) && Math.abs(pw) < 1e9) {
+                  const eL = fmtSide(a, 3, false, true);
+                  const eR = fmtSide(b, 3, true, false);
+                  if (eL && eR) {
+                    out.push({ val: pw, expr: `${eL}^${eR}`, prec: 3 });
+                  }
+                }
+              }
+              if (out.length >= 400) break;
+            }
+            if (out.length >= 400) break;
+          }
+        }
+        memo.set(key, out);
+        return out;
+      }
+
+      return solve(0, nodes.length - 1).slice(0, maxResults * 40);
+    }
+
+    function renderCandidate(item, index) {
+      const div = document.createElement('div');
+      div.className = 'flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-900/75 px-3.5 py-2.5 hover:border-cyan-500/40 transition';
+      div.innerHTML = `
+        <div class="min-w-0">
+          <div class="font-mono text-xs sm:text-sm text-slate-100 break-all">${escapeHtml(item.expr)}</div>
+          <div class="font-mono text-[11px] text-slate-500 mt-0.5">=${item.val}</div>
+        </div>
+        <button type="button" class="use-cand-btn shrink-0 text-[11px] font-mono px-2.5 py-1 rounded-md border border-slate-700 text-cyan-400 hover:bg-cyan-500/10 transition cursor-pointer">
+          反映
+        </button>
+      `;
+      div.querySelector('.use-cand-btn').addEventListener('click', () => {
+        $('formulaOutput').textContent = item.expr;
+        $('evalInfo').textContent = `評価値: ${item.val}`;
+      });
+      return div;
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, (m) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[m]));
+    }
+
+    async function runGenerator() {
+      if (isRunning) return;
+      const targetVal = parseTargetValue($('targetInput').value);
+      const rawDigits = parseDigits($('digitsInput').value);
+
+      if (targetVal === null) {
+        $('statusBadge').textContent = '入力エラー';
+        $('formulaOutput').textContent = '目標の値を正しく入力してください';
+        return;
+      }
+      if (rawDigits.length === 0 || rawDigits.length > 10) {
+        $('statusBadge').textContent = '数字数エラー';
+        $('formulaOutput').textContent = '数字は1〜10個の範囲で指定してください';
+        return;
+      }
+
+      const useAll = $('ruleUseAll').checked;
+      const allowOrderChange = $('ruleAllowOrderChange').checked;
+      const allowConcat = $('ruleAllowConcat').checked;
+      const allowParens = $('ruleAllowParens').checked;
+      const allowPower = $('ruleAllowPower').checked;
+      const allowFactorial = $('ruleAllowFactorial').checked;
+
+      isRunning = true;
+      abortFlag = false;
+      $('generateBtn').disabled = true;
+      $('stopBtn').disabled = false;
+      $('statusBadge').textContent = '探索中...';
+      $('candidatesList').innerHTML = '';
+      $('candidateCount').textContent = '0 件';
+
+      const t0 = performance.now();
+      let tries = 0;
+      const foundExprs = new Set();
+      const foundList = [];
+
+      const basePool = allowOrderChange ? [...rawDigits].sort() : [...rawDigits];
+      const subsets = useAll ? [basePool] : getSubsets(basePool);
+
+      const sequences = [];
+      for (const sub of subsets) {
+        if (allowOrderChange) {
+          const perms = getPermutations(sub, useAll ? 720 : 240);
+          for (const p of perms) sequences.push(p);
+        } else {
+          sequences.push(sub);
+        }
+        if (sequences.length > 1200) break;
+      }
+
+      for (let i = 0; i < sequences.length; i++) {
+        if (abortFlag || foundList.length >= 8) break;
+        const seq = sequences[i];
+        const splits = getConcatSplits(seq, allowConcat);
+
+        for (const parts of splits) {
+          if (abortFlag || foundList.length >= 8) break;
+          const variants = getUnaryVariants(parts, allowFactorial);
+
+          for (const nodes of variants) {
+            if (abortFlag || foundList.length >= 8) break;
+            const candidates = buildExpressions(nodes, allowParens, allowPower, 8);
+            for (const c of candidates) {
+              tries++;
+              if (Math.abs(c.val - targetVal) < 1e-9 && !foundExprs.has(c.expr)) {
+                foundExprs.add(c.expr);
+                foundList.push(c);
+                if (foundList.length === 1) {
+                  $('formulaOutput').textContent = c.expr;
+                  $('evalInfo').textContent = `評価値: ${c.val}`;
+                }
+                $('candidatesList').appendChild(renderCandidate(c, foundList.length - 1));
+                $('candidateCount').textContent = `${foundList.length} 件`;
+              }
+            }
+          }
+        }
+
+        if (i % 15 === 0) {
+          const elapsed = Math.round(performance.now() - t0);
+          $('statsInfo').textContent = `試行: ${tries.toLocaleString()} / 経過: ${elapsed}ms`;
+          await new Promise((r) => setTimeout(r, 0));
+        }
+      }
+
+      const totalElapsed = Math.round(performance.now() - t0);
+      $('statsInfo').textContent = `試行: ${tries.toLocaleString()} / 経過: ${totalElapsed}ms`;
+
+      if (foundList.length > 0) {
+        $('statusBadge').textContent = '生成完了';
+      } else if (abortFlag) {
+        $('statusBadge').textContent = '停止済み';
+        $('formulaOutput').textContent = '探索を停止しました';
+      } else {
+        $('statusBadge').textContent = '一致なし';
+        $('formulaOutput').textContent = '条件に合う式が見つかりませんでした';
+        $('evalInfo').textContent = `目標値: ${targetVal}`;
+      }
+
+      isRunning = false;
+      $('generateBtn').disabled = false;
+      $('stopBtn').disabled = true;
+    }
+
+    $('generateBtn').addEventListener('click', runGenerator);
+  </script>
+</body>
+</html>
