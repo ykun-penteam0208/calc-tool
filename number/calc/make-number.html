@@ -3,12 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>数式ソルバー・ジェネレーター | Formula Builder</title>
-  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <title>数式ば自動で作るやつだじゃ〜！(∩´∀`∩) | LaTeX＆津軽弁ソルバー</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+  <!-- KaTeX for LaTeX Rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -23,207 +29,268 @@
     };
   </script>
   <style>
+    /* 二重グリッド（メジャー・マイナー方眼）の黒背景 */
     body {
       background-color: #05070c;
       color: #f1f5f9;
       background-image:
-        linear-gradient(to right, rgba(56, 189, 248, 0.07) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(56, 189, 248, 0.07) 1px, transparent 1px),
-        linear-gradient(to right, rgba(148, 163, 184, 0.04) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(148, 163, 184, 0.04) 1px, transparent 1px);
+        linear-gradient(to right, rgba(56, 189, 248, 0.08) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(56, 189, 248, 0.08) 1px, transparent 1px),
+        linear-gradient(to right, rgba(148, 163, 184, 0.045) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(148, 163, 184, 0.045) 1px, transparent 1px);
       background-size: 96px 96px, 96px 96px, 24px 24px, 24px 24px;
       background-position: -1px -1px;
+    }
+
+    /* KaTeX 表示調整 */
+    .katex-display {
+      margin: 0 !important;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 0.25rem 0;
+    }
+    .katex {
+      font-size: 1.25rem;
+    }
+
+    /* カスタムスクロールバー */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.4);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(56, 189, 248, 0.25);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(56, 189, 248, 0.45);
     }
   </style>
 </head>
 <body class="min-h-screen antialiased selection:bg-cyan-500/30 selection:text-cyan-200">
   <div class="relative min-h-screen flex flex-col">
-    <!-- Top Bar -->
+    <!-- ヘッダー（左上にルートの index.html へ戻るボタン） -->
     <header class="sticky top-0 z-20 border-b border-slate-800/80 bg-[#05070c]/85 backdrop-blur-md">
-      <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
         <a
           href="./index.html"
-          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-700/80 bg-slate-900/80 text-slate-200 hover:text-cyan-300 hover:border-cyan-500/50 transition text-sm font-medium shrink-0"
-          aria-label="ルートの index.html に戻る"
+          class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-700/80 bg-slate-900/90 text-slate-200 hover:text-cyan-300 hover:border-cyan-500/50 transition text-sm font-medium shrink-0"
+          aria-label="一番上の index.html に戻るべさ"
         >
           <i data-lucide="arrow-left" class="w-4 h-4 text-cyan-400"></i>
-          <span>index.html</span>
+          <span>index.html に戻るべし〜！</span>
         </a>
 
         <div class="flex items-center gap-2.5 min-w-0">
-          <div class="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shrink-0">
+          <div class="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shrink-0">
             <i data-lucide="calculator" class="w-4 h-4"></i>
           </div>
-          <h1 class="text-sm sm:text-base font-semibold tracking-tight text-slate-100 truncate">
-            AUTO FORMULA BUILDER
+          <h1 class="text-sm sm:text-base font-bold tracking-tight text-slate-100 truncate">
+            数式オートジェネレーターだじゃ〜！(ง •̀_•́)ง🔥
           </h1>
         </div>
 
-        <div class="w-20 sm:w-28 flex justify-end">
+        <div class="w-20 sm:w-32 flex justify-end">
           <span class="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-mono text-emerald-400/90 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            READY
+            準備万端だじゃ！
           </span>
         </div>
       </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-8 space-y-6">
+    <!-- メインコンテンツ -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        <!-- Left Column: Inputs & Rule Checkboxes -->
+        <!-- 左カラム: 入力＆ルールチェックボックス -->
         <section class="lg:col-span-5 space-y-6">
           <div class="rounded-2xl border border-slate-800/90 bg-slate-950/80 backdrop-blur-sm p-5 sm:p-6 shadow-2xl space-y-5">
             <div class="flex items-center justify-between border-b border-slate-800/80 pb-3.5">
               <div class="flex items-center gap-2">
                 <i data-lucide="sliders-horizontal" class="w-4 h-4 text-cyan-400"></i>
-                <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-200">ターゲット＆数字設定</h2>
+                <h2 class="text-sm font-semibold tracking-wide text-slate-200">狙う数字＆使う数字だじゃ〜！</h2>
               </div>
               <button
                 id="presetBtn"
                 type="button"
-                class="inline-flex items-center gap-1 text-xs font-mono text-cyan-400 hover:text-cyan-300 transition"
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-cyan-500/25 bg-cyan-500/10 text-xs font-mono text-cyan-300 hover:bg-cyan-500/20 transition cursor-pointer"
               >
                 <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-                <span>サンプル読込</span>
+                <span>お題チェンジ！(∩´∀`∩)</span>
               </button>
             </div>
 
+            <!-- 目標値入力 -->
             <div class="space-y-2">
               <label for="targetInput" class="block text-xs font-medium text-slate-300">
-                目標の値（整数・小数・分数表記 例: <span class="font-mono text-cyan-400">1015</span> / <span class="font-mono text-cyan-400">1/6</span>）
+                作りたい数字（<span class="font-mono text-cyan-400">1015</span>、<span class="font-mono text-cyan-400">1/6</span>、<span class="font-mono text-cyan-400">pi/2</span>、<span class="font-mono text-cyan-400">0.5</span> とかどんとこいだじゃ！）
               </label>
               <input
                 id="targetInput"
                 type="text"
                 value="1015"
-                placeholder="例: 1015 または 1/6"
+                placeholder="例: 1015 とか 1/6 とか pi/2 だべさ〜！"
                 class="w-full rounded-xl border border-slate-700/80 bg-slate-900/90 px-3.5 py-2.5 font-mono text-base text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 transition"
               />
             </div>
 
+            <!-- 使用する数字入力 -->
             <div class="space-y-2">
               <label for="digitsInput" class="block text-xs font-medium text-slate-300">
-                使用する数字プール（カンマ区切りまたは連続文字）
+                使う数字のメンツ（コンマ区切りでもくっつけてもOKだじゃ！）
               </label>
               <input
                 id="digitsInput"
                 type="text"
                 value="1,2,3,4,5,6,7,8,9,0"
-                placeholder="例: 1,2,3,4,5,6,7,8,9,0"
+                placeholder="例: 1,2,3,4,5,6,7,8,9,0 だじゃ〜！"
                 class="w-full rounded-xl border border-slate-700/80 bg-slate-900/90 px-3.5 py-2.5 font-mono text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 transition"
               />
             </div>
 
-            <!-- Rule Checkboxes -->
+            <!-- ルール変更チェックボックス群 -->
             <div class="space-y-3 pt-1">
-              <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                <i data-lucide="check-square" class="w-3.5 h-3.5 text-cyan-400"></i>
-                <span>ルール変更（チェックボックス）</span>
+              <div class="flex items-center justify-between">
+                <span class="flex items-center gap-1.5 text-xs font-semibold tracking-wider text-slate-400">
+                  <i data-lucide="check-square" class="w-3.5 h-3.5 text-cyan-400"></i>
+                  <span>ルールいじり（チェックで変えられんだべさ！）</span>
+                </span>
+                <span id="activeRulesBadge" class="text-[11px] font-mono text-cyan-400">9/9 オンだじゃ！</span>
               </div>
 
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <label class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-slate-700 cursor-pointer transition select-none">
-                  <input id="ruleUseAll" type="checkbox" checked class="w-4 h-4 rounded accent-cyan-400 bg-slate-800 border-slate-600" />
-                  <span class="text-xs font-medium text-slate-200">全数字を1回ずつ使う</span>
+                  <input id="ruleUseAll" type="checkbox" checked class="rule-checkbox w-4 h-4 rounded accent-cyan-400 bg-slate-800 border-slate-600 cursor-pointer" />
+                  <span class="text-xs font-medium text-slate-200">全部の数字1回ずつOK</span>
                 </label>
 
                 <label class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-slate-700 cursor-pointer transition select-none">
-                  <input id="ruleAllowOrderChange" type="checkbox" checked class="w-4 h-4 rounded accent-cyan-400 bg-slate-800 border-slate-600" />
-                  <span class="text-xs font-medium text-slate-200">数字の順番変更OK</span>
+                  <input id="ruleAllowOrderChange" type="checkbox" checked class="rule-checkbox w-4 h-4 rounded accent-cyan-400 bg-slate-800 border-slate-600 cursor-pointer" />
+                  <span class="text-xs font-medium text-slate-200">順番シャッフルOK</span>
                 </label>
 
                 <label class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-slate-700 cursor-pointer transition select-none">
-                  <input id="ruleAllowConcat" type="checkbox" checked class="w-4 h-4 rounded accent-cyan-400 bg-slate-800 border-slate-600" />
-                  <span class="text-xs font-medium text-slate-200">桁の連結（12, 890等）</span>
+                  <input id="ruleAllowConcat" type="checkbox" checked class="rule-checkbox w-4 h-4 rounded accent-cyan-400 bg-slate-800 border-slate-600 cursor-pointer" />
+                  <span class="text-xs font-medium text-slate-200">桁の連結OK（12, 890等）</span>
                 </label>
 
                 <label class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-slate-700 cursor-pointer transition select-none">
-                  <input id="ruleAllowParens" type="checkbox" checked class="w-4 h-4 rounded accent-cyan-400 bg-slate-800 border-slate-600" />
-                  <span class="text-xs font-medium text-slate-200">カッコ ( ) 使用OK</span>
+                  <input id="ruleAllowParens" type="checkbox" checked class="rule-checkbox w-4 h-4 rounded accent-cyan-400 bg-slate-800 border-slate-600 cursor-pointer" />
+                  <span class="text-xs font-medium text-slate-200">カッコ ( ) 使ってOK</span>
                 </label>
 
                 <label class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-slate-700 cursor-pointer transition select-none">
-                  <input id="ruleAllowPower" type="checkbox" checked class="w-4 h-4 rounded accent-cyan-400 bg-slate-800 border-slate-600" />
-                  <span class="text-xs font-medium text-slate-200">累乗 ( ^ ) を使う</span>
+                  <input id="ruleAllowPower" type="checkbox" checked class="rule-checkbox w-4 h-4 rounded accent-cyan-400 bg-slate-800 border-slate-600 cursor-pointer" />
+                  <span class="text-xs font-medium text-slate-200">累乗 ( ^ ) も解禁だじゃ！</span>
                 </label>
 
                 <label class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-slate-700 cursor-pointer transition select-none">
-                  <input id="ruleAllowFactorial" type="checkbox" checked class="w-4 h-4 rounded accent-cyan-400 bg-slate-800 border-slate-600" />
-                  <span class="text-xs font-medium text-slate-200">階乗 ( ! ) を使う</span>
+                  <input id="ruleAllowFactorial" type="checkbox" checked class="rule-checkbox w-4 h-4 rounded accent-cyan-400 bg-slate-800 border-slate-600 cursor-pointer" />
+                  <span class="text-xs font-medium text-slate-200">階乗 ( ! ) も解禁だじゃ！</span>
+                </label>
+
+                <label class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-slate-700 cursor-pointer transition select-none">
+                  <input id="ruleAllowTrig" type="checkbox" checked class="rule-checkbox w-4 h-4 rounded accent-cyan-400 bg-slate-800 border-slate-600 cursor-pointer" />
+                  <span class="text-xs font-medium text-slate-200">三角比 sin / cos / tan OK</span>
+                </label>
+
+                <label class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-slate-700 cursor-pointer transition select-none">
+                  <input id="ruleAllowInvTrig" type="checkbox" checked class="rule-checkbox w-4 h-4 rounded accent-cyan-400 bg-slate-800 border-slate-600 cursor-pointer" />
+                  <span class="text-xs font-medium text-slate-200">逆三角比 arcsin / arccos / arctan OK</span>
+                </label>
+
+                <label class="sm:col-span-2 flex items-center gap-2.5 p-3 rounded-xl border border-slate-800 bg-slate-900/60 hover:border-slate-700 cursor-pointer transition select-none">
+                  <input id="ruleAllowSqrt" type="checkbox" checked class="rule-checkbox w-4 h-4 rounded accent-cyan-400 bg-slate-800 border-slate-600 cursor-pointer" />
+                  <span class="text-xs font-medium text-slate-200">ルート ( √ ) もガンガン使ってOKだじゃ！</span>
                 </label>
               </div>
             </div>
 
+            <!-- 実行・停止ボタン -->
             <div class="pt-2 flex items-center gap-3">
               <button
                 id="generateBtn"
                 type="button"
-                class="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 active:bg-cyan-500 text-slate-950 font-semibold text-sm py-3 px-4 shadow-lg shadow-cyan-500/20 transition cursor-pointer"
+                class="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 active:bg-cyan-500 disabled:opacity-50 text-slate-950 font-semibold text-sm py-3 px-4 shadow-lg shadow-cyan-500/20 transition cursor-pointer"
               >
                 <i data-lucide="play" class="w-4 h-4 fill-current"></i>
-                <span>式を自動生成する</span>
+                <span>俺に式ば作らせるじゃ〜！(ง •̀_•́)ง</span>
               </button>
 
               <button
                 id="stopBtn"
                 type="button"
                 disabled
-                class="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900 hover:bg-slate-800 disabled:opacity-40 disabled:pointer-events-none text-slate-200 font-medium text-sm py-3 px-3.5 transition cursor-pointer"
-                title="探索停止"
+                class="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900 hover:bg-slate-800 disabled:opacity-40 disabled:pointer-events-none text-slate-200 font-medium text-sm py-3 px-4 transition cursor-pointer"
+                aria-label="探索ばストップするべさ"
               >
                 <i data-lucide="square" class="w-4 h-4"></i>
+                <span class="hidden sm:inline text-xs font-mono">ストップ</span>
               </button>
             </div>
           </div>
         </section>
 
-        <!-- Right Column: Result & Steps -->
+        <!-- 右カラム: 生成結果（LaTeX）＆候補一覧 -->
         <section class="lg:col-span-7 space-y-6">
           <div class="rounded-2xl border border-slate-800/90 bg-slate-950/80 backdrop-blur-sm p-5 sm:p-6 shadow-2xl space-y-5">
             <div class="flex items-center justify-between border-b border-slate-800/80 pb-3.5">
               <div class="flex items-center gap-2">
                 <i data-lucide="terminal" class="w-4 h-4 text-cyan-400"></i>
-                <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-200">生成された数式</h2>
+                <h2 class="text-sm font-semibold tracking-wide text-slate-200">できた LaTeX 数式だじゃ〜！(∩´∀`∩)</h2>
               </div>
-              <span id="statusBadge" class="text-xs font-mono px-2.5 py-1 rounded-md bg-slate-900 text-slate-400 border border-slate-800">
-                待機中
+              <span id="statusBadge" class="text-xs font-mono px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 border border-slate-800">
+                ひま待ち中〜
               </span>
             </div>
 
-            <div id="resultBox" class="rounded-xl border border-slate-800 bg-[#070b12] p-5 min-h-[140px] flex flex-col justify-between gap-4">
+            <!-- メイン数式表示エリア（LaTeX + 生LaTeXコード） -->
+            <div id="resultBox" class="rounded-xl border border-slate-800 bg-[#070b12] p-5 min-h-[168px] flex flex-col justify-between gap-4">
               <div class="flex items-start justify-between gap-3">
-                <div id="formulaOutput" class="font-mono text-lg sm:text-2xl font-semibold text-cyan-300 break-all leading-relaxed">
-                  式を生成してください
+                <div class="min-w-0 flex-1 space-y-2.5">
+                  <div id="latexOutput" class="text-cyan-300 min-h-[44px] flex items-center">
+                    <span class="font-mono text-sm sm:text-base text-slate-300">
+                      ボタン押して俺ば動かしてみれじゃ〜！(ง •̀_•́)ง✨
+                    </span>
+                  </div>
+                  <div id="rawLatexSource" class="font-mono text-xs text-slate-500 break-all select-all">
+                    LaTeX: --
+                  </div>
                 </div>
+
                 <button
                   id="copyBtn"
                   type="button"
-                  class="inline-flex items-center gap-1.5 rounded-lg border border-slate-700/80 bg-slate-900/90 hover:border-cyan-500/50 hover:text-cyan-300 text-slate-300 text-xs font-mono px-2.5 py-1.5 shrink-0 transition cursor-pointer"
+                  class="inline-flex items-center gap-1.5 rounded-lg border border-slate-700/80 bg-slate-900/90 hover:border-cyan-500/50 hover:text-cyan-300 text-slate-300 text-xs font-mono px-3 py-1.5 shrink-0 transition cursor-pointer"
                 >
                   <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-                  <span id="copyLabel">コピー</span>
+                  <span id="copyLabel">LaTeXパクる</span>
                 </button>
               </div>
 
               <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-800/70 text-xs font-mono text-slate-400">
-                <div id="evalInfo">評価値: --</div>
-                <div id="statsInfo">試行: 0 / 経過: 0ms</div>
+                <div id="evalInfo">計算結果: --</div>
+                <div id="statsInfo">探した回数: 0 / 時間: 0ms</div>
               </div>
             </div>
 
-            <!-- Candidates List -->
+            <!-- 候補一覧 -->
             <div class="space-y-2.5">
               <div class="flex items-center justify-between">
-                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                <span class="text-xs font-semibold tracking-wider text-slate-400 flex items-center gap-1.5">
                   <i data-lucide="list-checks" class="w-3.5 h-3.5 text-cyan-400"></i>
-                  <span>見つかった候補一覧</span>
+                  <span>見つけた LaTeX 候補たちだじゃ（タップで上にドーン！）</span>
                 </span>
-                <span id="candidateCount" class="text-xs font-mono text-slate-500">0 件</span>
+                <span id="candidateCount" class="text-xs font-mono text-slate-500">0 個</span>
               </div>
-              <div id="candidatesList" class="space-y-2 max-h-72 overflow-y-auto pr-1">
+
+              <div id="candidatesList" class="space-y-2 max-h-80 overflow-y-auto pr-1">
                 <div class="rounded-xl border border-dashed border-slate-800 bg-slate-900/30 p-4 text-center text-xs text-slate-500">
-                  「式を自動生成する」を押すと一致した数式がここに表示されます。
+                  ピタッと合う式が見つかったら、LaTeX でここにズラッと並ぶべさ〜！(∩´∀`∩)🎉
                 </div>
               </div>
             </div>
@@ -234,45 +301,120 @@
   </div>
 
   <script>
-    lucide.createIcons();
+    // Lucide アイコン初期化
+    if (window.lucide && typeof window.lucide.createIcons === 'function') {
+      window.lucide.createIcons();
+    }
 
     const $ = (id) => document.getElementById(id);
 
+    // サンプルプリセット一覧
     const presets = [
       { target: '1015', digits: '1,2,3,4,5,6,7,8,9,0' },
       { target: '1010', digits: '1,2,3,4,5,6,7,8,9,0' },
       { target: '1005', digits: '1,2,3,4,5,6,7,8,9,0' },
       { target: '2026', digits: '1,2,3,4,5,6,7,8,9,0' },
       { target: '1/6',  digits: '1,2,3,4,5,6,7,8,9,0' },
+      { target: '0.5',  digits: '1,2,3,4,5,6,7,8,9,0' },
     ];
     let presetIdx = 0;
+    let currentRawLatex = '';
 
     let abortFlag = false;
     let isRunning = false;
 
+    // KaTeX 描画ヘルパー
+    function renderTex(el, texStr, displayMode = true) {
+      if (!el) return;
+      if (window.katex && typeof window.katex.render === 'function') {
+        try {
+          window.katex.render(texStr, el, {
+            displayMode,
+            throwOnError: false,
+          });
+          return;
+        } catch (_) {}
+      }
+      el.textContent = texStr;
+    }
+
+    // メイン数式表示更新
+    function setMainFormula(texStr, evalVal) {
+      currentRawLatex = texStr;
+      renderTex($('latexOutput'), texStr, true);
+      $('rawLatexSource').textContent = `LaTeX: ${texStr}`;
+      if (typeof evalVal === 'number' && Number.isFinite(evalVal)) {
+        $('evalInfo').textContent = `計算結果: ${Number(evalVal.toFixed(10))}`;
+      }
+    }
+
+    // 有効なチェックボックス数の表示を更新
+    function updateRuleBadge() {
+      const boxes = Array.from(document.querySelectorAll('.rule-checkbox'));
+      const activeCount = boxes.filter((el) => el.checked).length;
+      $('activeRulesBadge').textContent = `${activeCount}/${boxes.length} オンだじゃ！`;
+    }
+
+    document.querySelectorAll('.rule-checkbox').forEach((box) => {
+      box.addEventListener('change', updateRuleBadge);
+    });
+    updateRuleBadge();
+
+    // サンプル読込ボタン
     $('presetBtn').addEventListener('click', () => {
-      const p = presets[presetIdx % presets.length];
-      $('targetInput').value = p.target;
-      $('digitsInput').value = p.digits;
-      presetIdx++;
+      const preset = presets[presetIdx % presets.length];
+      $('targetInput').value = preset.target;
+      $('digitsInput').value = preset.digits;
+      presetIdx += 1;
     });
 
+    // クリップボードコピー（execCommand フォールバック対応）
     $('copyBtn').addEventListener('click', async () => {
-      const text = $('formulaOutput').textContent.trim();
-      if (!text || text === '式を生成してください') return;
+      if (!currentRawLatex) return;
+      let copied = false;
       try {
-        await navigator.clipboard.writeText(text);
-        $('copyLabel').textContent = 'コピー済';
-        setTimeout(() => { $('copyLabel').textContent = 'コピー'; }, 1400);
-      } catch (_) {}
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(currentRawLatex);
+          copied = true;
+        }
+      } catch (_) {
+        copied = false;
+      }
+      if (!copied) {
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = currentRawLatex;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          copied = true;
+        } catch (_) {}
+      }
+      if (copied) {
+        $('copyLabel').textContent = 'バッチリパクったじゃ！(≧∇≦)b';
+        setTimeout(() => {
+          $('copyLabel').textContent = 'LaTeXパクる';
+        }, 1400);
+      }
     });
 
+    // 停止ボタン
     $('stopBtn').addEventListener('click', () => {
       abortFlag = true;
     });
 
+    // 目標値のパース（整数・小数・分数 a/b・pi/e・簡易演算式）
     function parseTargetValue(raw) {
-      const s = raw.trim().replace(/\s+/g, '');
+      const s = raw
+        .trim()
+        .replace(/×/g, '*')
+        .replace(/÷/g, '/')
+        .replace(/\bpi\b/gi, 'Math.PI')
+        .replace(/\be\b/g, 'Math.E')
+        .replace(/\s+/g, '');
       if (!s) return null;
       const fracMatch = s.match(/^([+-]?\d+(?:\.\d+)?)\/([+-]?\d+(?:\.\d+)?)$/);
       if (fracMatch) {
@@ -282,7 +424,8 @@
         return num / den;
       }
       try {
-        if (!/^[0-9+\-*/().^\s]+$/.test(s)) return null;
+        const sanitized = s.replace(/Math\.(PI|E)/g, '1');
+        if (!/^[0-9+\-*/().^\s]+$/.test(sanitized)) return null;
         const jsExpr = s.replace(/\^/g, '**');
         const val = Function(`"use strict"; return (${jsExpr});`)();
         return typeof val === 'number' && Number.isFinite(val) ? val : null;
@@ -291,6 +434,7 @@
       }
     }
 
+    // 使用数字リストのパース
     function parseDigits(raw) {
       const cleaned = raw.trim();
       if (!cleaned) return [];
@@ -300,14 +444,18 @@
       return cleaned.replace(/\s+/g, '').split('');
     }
 
+    // 階乗（オーバーフロー防止のため 0..7 に制限）
     function factorial(n) {
       if (!Number.isInteger(n) || n < 0 || n > 7) return null;
-      let r = 1;
-      for (let i = 2; i <= n; i++) r *= i;
-      return r;
+      let res = 1;
+      for (let i = 2; i <= n; i += 1) {
+        res *= i;
+      }
+      return res;
     }
 
-    function getPermutations(arr, maxCount = 5040) {
+    // 順列生成（重複要素を考慮）
+    function getPermutations(arr, maxCount = 720) {
       const results = [];
       const used = new Array(arr.length).fill(false);
       const path = [];
@@ -317,7 +465,7 @@
           results.push([...path]);
           return;
         }
-        for (let i = 0; i < arr.length; i++) {
+        for (let i = 0; i < arr.length; i += 1) {
           if (used[i]) continue;
           if (i > 0 && arr[i] === arr[i - 1] && !used[i - 1]) continue;
           used[i] = true;
@@ -331,12 +479,13 @@
       return results;
     }
 
+    // 部分集合生成（全数字使用OFF時用）
     function getSubsets(arr) {
       const out = [];
       const total = 1 << arr.length;
-      for (let mask = 1; mask < total; mask++) {
+      for (let mask = 1; mask < total; mask += 1) {
         const sub = [];
-        for (let i = 0; i < arr.length; i++) {
+        for (let i = 0; i < arr.length; i += 1) {
           if ((mask >> i) & 1) sub.push(arr[i]);
         }
         out.push(sub);
@@ -345,12 +494,13 @@
       return out;
     }
 
+    // 桁の連結分割
     function getConcatSplits(seq, allowConcat) {
       if (!allowConcat) {
         for (const token of seq) {
           if (!/^[+-]?\d+(\.\d+)?$/.test(token)) return [];
         }
-        return [seq.map((t) => ({ val: Number(t), disp: t }))];
+        return [seq.map((t) => ({ val: Number(t), tex: t, prec: 4 }))];
       }
       const splits = [];
       function dfs(idx, acc) {
@@ -358,17 +508,17 @@
           splits.push([...acc]);
           return;
         }
-        for (let end = idx + 1; end <= seq.length; end++) {
+        for (let end = idx + 1; end <= seq.length; end += 1) {
           const piece = seq.slice(idx, end).join('');
           if (/^\d+$/.test(piece)) {
             if (piece.length > 1 && piece.startsWith('0')) continue;
-            acc.push({ val: Number(piece), disp: piece });
+            acc.push({ val: Number(piece), tex: piece, prec: 4 });
             dfs(end, acc);
             acc.pop();
           } else if (end === idx + 1) {
             const num = Number(piece);
             if (Number.isFinite(num)) {
-              acc.push({ val: num, disp: piece });
+              acc.push({ val: num, tex: piece, prec: 4 });
               dfs(end, acc);
               acc.pop();
             }
@@ -379,26 +529,75 @@
       return splits;
     }
 
-    function getUnaryVariants(parts, allowFactorial) {
-      const listOfChoices = parts.map((p) => {
-        const opts = [{ val: p.val, disp: p.disp }];
+    // 単項演算バリエーション生成（階乗 !、ルート \sqrt{}、三角比 sin/cos/tan、逆三角比 arcsin/arccos/arctan）
+    function getUnaryVariants(parts, optsRule) {
+      const { allowFactorial, allowTrig, allowInvTrig, allowSqrt } = optsRule;
+
+      const choiceLists = parts.map((p) => {
+        const opts = [{ val: p.val, tex: p.tex, prec: 4 }];
+
+        // 階乗 !
         if (allowFactorial && Number.isInteger(p.val) && p.val >= 1 && p.val <= 6) {
           const f = factorial(p.val);
           if (f !== null) {
-            opts.push({ val: f, disp: `${p.disp}!` });
+            const baseTex = p.prec < 4 ? `(${p.tex})` : p.tex;
+            opts.push({ val: f, tex: `${baseTex}!`, prec: 4 });
           }
         }
-        return opts;
+
+        // 平方根 \sqrt{}
+        if (allowSqrt && p.val >= 0 && p.val <= 10000) {
+          const r = Math.sqrt(p.val);
+          if (Number.isFinite(r)) {
+            opts.push({ val: r, tex: `\\sqrt{${p.tex}}`, prec: 4 });
+          }
+        }
+
+        // 三角比 sin / cos / tan（ラジアン扱い、精度誤差に注意しつつ探索）
+        if (allowTrig && Math.abs(p.val) <= 64) {
+          const s = Math.sin(p.val);
+          const c = Math.cos(p.val);
+          const t = Math.tan(p.val);
+          if (Number.isFinite(s) && Math.abs(s) > 1e-12) {
+            opts.push({ val: s, tex: `\\sin(${p.tex})`, prec: 4 });
+          }
+          if (Number.isFinite(c) && Math.abs(c) > 1e-12) {
+            opts.push({ val: c, tex: `\\cos(${p.tex})`, prec: 4 });
+          }
+          if (Number.isFinite(t) && Math.abs(t) < 1e6 && Math.abs(c) > 1e-6) {
+            opts.push({ val: t, tex: `\\tan(${p.tex})`, prec: 4 });
+          }
+        }
+
+        // 逆三角比 arcsin / arccos / arctan
+        if (allowInvTrig && Math.abs(p.val) <= 1) {
+          const as = Math.asin(p.val);
+          const ac = Math.acos(p.val);
+          if (Number.isFinite(as)) {
+            opts.push({ val: as, tex: `\\arcsin(${p.tex})`, prec: 4 });
+          }
+          if (Number.isFinite(ac)) {
+            opts.push({ val: ac, tex: `\\arccos(${p.tex})`, prec: 4 });
+          }
+        }
+        if (allowInvTrig && Math.abs(p.val) <= 10000) {
+          const at = Math.atan(p.val);
+          if (Number.isFinite(at)) {
+            opts.push({ val: at, tex: `\\arctan(${p.tex})`, prec: 4 });
+          }
+        }
+
+        return opts.slice(0, 6);
       });
 
       const combos = [];
       function dfs(i, cur) {
-        if (combos.length > 256) return;
-        if (i === listOfChoices.length) {
+        if (combos.length >= 256) return;
+        if (i === choiceLists.length) {
           combos.push([...cur]);
           return;
         }
-        for (const opt of listOfChoices[i]) {
+        for (const opt of choiceLists[i]) {
           cur.push(opt);
           dfs(i + 1, cur);
           cur.pop();
@@ -408,19 +607,20 @@
       return combos;
     }
 
-    function buildExpressions(nodes, allowParens, allowPower, maxResults = 6) {
+    // 式木構築・評価（LaTeX形式・優先順位とカッコ制御）
+    function buildExpressions(nodes, allowParens, allowPower, maxResults = 10) {
       const memo = new Map();
 
       function solve(l, r) {
         const key = `${l},${r}`;
         if (memo.has(key)) return memo.get(key);
         if (l === r) {
-          const base = [{ val: nodes[l].val, expr: nodes[l].disp, prec: 4 }];
+          const base = [{ val: nodes[l].val, tex: nodes[l].tex, prec: nodes[l].prec || 4 }];
           memo.set(key, base);
           return base;
         }
         const out = [];
-        for (let mid = l; mid < r; mid++) {
+        for (let mid = l; mid < r; mid += 1) {
           const leftList = solve(l, mid);
           const rightList = solve(mid + 1, r);
           for (const a of leftList) {
@@ -431,56 +631,57 @@
                 const needsParen = isPowBase
                   ? side.prec < 4
                   : side.prec < opPrec || (isRight && side.prec === opPrec);
-                if (!needsParen) return side.expr;
-                return allowParens ? `(${side.expr})` : null;
+                if (!needsParen) return side.tex;
+                return allowParens ? `(${side.tex})` : null;
               };
 
-              // +
+              // 加算 +
               {
                 const eL = fmtSide(a, 1, false);
                 const eR = fmtSide(b, 1, true);
                 if (eL && eR) {
-                  out.push({ val: a.val + b.val, expr: `${eL} + ${eR}`, prec: 1 });
+                  out.push({ val: a.val + b.val, tex: `${eL} + ${eR}`, prec: 1 });
                 }
               }
-              // -
+              // 減算 -
               {
                 const eL = fmtSide(a, 1, false);
                 const eR = fmtSide(b, 1, true);
                 if (eL && eR) {
-                  out.push({ val: a.val - b.val, expr: `${eL} - ${eR}`, prec: 1 });
+                  out.push({ val: a.val - b.val, tex: `${eL} - ${eR}`, prec: 1 });
                 }
               }
-              // *
+              // 乗算 \times
               {
                 const eL = fmtSide(a, 2, false);
                 const eR = fmtSide(b, 2, true);
                 if (eL && eR) {
-                  out.push({ val: a.val * b.val, expr: `${eL} × ${eR}`, prec: 2 });
+                  out.push({ val: a.val * b.val, tex: `${eL} \\times ${eR}`, prec: 2 });
                 }
               }
-              // /
+              // 除算 \div
               if (Math.abs(b.val) > 1e-12) {
                 const eL = fmtSide(a, 2, false);
                 const eR = fmtSide(b, 2, true);
                 if (eL && eR) {
-                  out.push({ val: a.val / b.val, expr: `${eL} ÷ ${eR}`, prec: 2 });
+                  out.push({ val: a.val / b.val, tex: `${eL} \\div ${eR}`, prec: 2 });
                 }
               }
-              // ^ (power)
+              // 累乗 ^
               if (allowPower && Math.abs(a.val) <= 25 && b.val >= -6 && b.val <= 6) {
                 const pw = Math.pow(a.val, b.val);
                 if (typeof pw === 'number' && Number.isFinite(pw) && Math.abs(pw) < 1e9) {
                   const eL = fmtSide(a, 3, false, true);
                   const eR = fmtSide(b, 3, true, false);
                   if (eL && eR) {
-                    out.push({ val: pw, expr: `${eL}^${eR}`, prec: 3 });
+                    out.push({ val: pw, tex: `${eL}^{${eR}}`, prec: 3 });
                   }
                 }
               }
-              if (out.length >= 400) break;
+
+              if (out.length >= 420) break;
             }
-            if (out.length >= 400) break;
+            if (out.length >= 420) break;
           }
         }
         memo.set(key, out);
@@ -490,44 +691,53 @@
       return solve(0, nodes.length - 1).slice(0, maxResults * 40);
     }
 
-    function renderCandidate(item, index) {
+    // 候補アイテムDOM生成（LaTeX描画）
+    function renderCandidate(item) {
       const div = document.createElement('div');
       div.className = 'flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-900/75 px-3.5 py-2.5 hover:border-cyan-500/40 transition';
-      div.innerHTML = `
-        <div class="min-w-0">
-          <div class="font-mono text-xs sm:text-sm text-slate-100 break-all">${escapeHtml(item.expr)}</div>
-          <div class="font-mono text-[11px] text-slate-500 mt-0.5">=${item.val}</div>
-        </div>
-        <button type="button" class="use-cand-btn shrink-0 text-[11px] font-mono px-2.5 py-1 rounded-md border border-slate-700 text-cyan-400 hover:bg-cyan-500/10 transition cursor-pointer">
-          反映
-        </button>
-      `;
-      div.querySelector('.use-cand-btn').addEventListener('click', () => {
-        $('formulaOutput').textContent = item.expr;
-        $('evalInfo').textContent = `評価値: ${item.val}`;
+
+      const leftWrap = document.createElement('div');
+      leftWrap.className = 'min-w-0 flex-1 space-y-1';
+
+      const texBox = document.createElement('div');
+      texBox.className = 'text-slate-100 overflow-x-auto';
+      renderTex(texBox, item.tex, false);
+
+      const metaBox = document.createElement('div');
+      metaBox.className = 'font-mono text-[11px] text-slate-500 truncate';
+      metaBox.textContent = `= ${Number(item.val.toFixed(10))} | ${item.tex}`;
+
+      leftWrap.appendChild(texBox);
+      leftWrap.appendChild(metaBox);
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'shrink-0 text-[11px] font-mono px-2.5 py-1 rounded-md border border-slate-700 text-cyan-400 hover:bg-cyan-500/10 transition cursor-pointer';
+      btn.textContent = 'これにする！';
+      btn.addEventListener('click', () => {
+        setMainFormula(item.tex, item.val);
       });
+
+      div.appendChild(leftWrap);
+      div.appendChild(btn);
       return div;
     }
 
-    function escapeHtml(str) {
-      return str.replace(/[&<>"']/g, (m) => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-      }[m]));
-    }
-
+    // 探索メインループ
     async function runGenerator() {
       if (isRunning) return;
+
       const targetVal = parseTargetValue($('targetInput').value);
       const rawDigits = parseDigits($('digitsInput').value);
 
       if (targetVal === null) {
-        $('statusBadge').textContent = '入力エラー';
-        $('formulaOutput').textContent = '目標の値を正しく入力してください';
+        $('statusBadge').textContent = '入力ミスだじゃ〜！(；´Д｀)';
+        $('latexOutput').innerHTML = '<span class="font-mono text-sm text-rose-400">目標の数字ばちゃんと入れてみれじゃ〜！</span>';
         return;
       }
       if (rawDigits.length === 0 || rawDigits.length > 10) {
-        $('statusBadge').textContent = '数字数エラー';
-        $('formulaOutput').textContent = '数字は1〜10個の範囲で指定してください';
+        $('statusBadge').textContent = '数字の個数エラーだべさ';
+        $('latexOutput').innerHTML = '<span class="font-mono text-sm text-rose-400">数字は1個から10個までの間で入れてくれじゃ〜！</span>';
         return;
       }
 
@@ -537,14 +747,18 @@
       const allowParens = $('ruleAllowParens').checked;
       const allowPower = $('ruleAllowPower').checked;
       const allowFactorial = $('ruleAllowFactorial').checked;
+      const allowTrig = $('ruleAllowTrig').checked;
+      const allowInvTrig = $('ruleAllowInvTrig').checked;
+      const allowSqrt = $('ruleAllowSqrt').checked;
 
       isRunning = true;
       abortFlag = false;
       $('generateBtn').disabled = true;
       $('stopBtn').disabled = false;
-      $('statusBadge').textContent = '探索中...';
+      $('statusBadge').textContent = '俺が探してる最中だじゃ〜！(ง •̀_•́)ง';
       $('candidatesList').innerHTML = '';
-      $('candidateCount').textContent = '0 件';
+      $('candidateCount').textContent = '0 個';
+      $('evalInfo').textContent = `狙いの値: ${Number(targetVal.toFixed(10))}`;
 
       const t0 = performance.now();
       let tries = 0;
@@ -565,53 +779,53 @@
         if (sequences.length > 1200) break;
       }
 
-      for (let i = 0; i < sequences.length; i++) {
-        if (abortFlag || foundList.length >= 8) break;
+      const unaryRuleOpts = { allowFactorial, allowTrig, allowInvTrig, allowSqrt };
+
+      for (let i = 0; i < sequences.length; i += 1) {
+        if (abortFlag || foundList.length >= 10) break;
         const seq = sequences[i];
         const splits = getConcatSplits(seq, allowConcat);
 
         for (const parts of splits) {
-          if (abortFlag || foundList.length >= 8) break;
-          const variants = getUnaryVariants(parts, allowFactorial);
+          if (abortFlag || foundList.length >= 10) break;
+          const variants = getUnaryVariants(parts, unaryRuleOpts);
 
           for (const nodes of variants) {
-            if (abortFlag || foundList.length >= 8) break;
-            const candidates = buildExpressions(nodes, allowParens, allowPower, 8);
+            if (abortFlag || foundList.length >= 10) break;
+            const candidates = buildExpressions(nodes, allowParens, allowPower, 10);
             for (const c of candidates) {
-              tries++;
-              if (Math.abs(c.val - targetVal) < 1e-9 && !foundExprs.has(c.expr)) {
-                foundExprs.add(c.expr);
+              tries += 1;
+              if (Math.abs(c.val - targetVal) < 1e-8 && !foundExprs.has(c.tex)) {
+                foundExprs.add(c.tex);
                 foundList.push(c);
                 if (foundList.length === 1) {
-                  $('formulaOutput').textContent = c.expr;
-                  $('evalInfo').textContent = `評価値: ${c.val}`;
+                  setMainFormula(c.tex, c.val);
                 }
-                $('candidatesList').appendChild(renderCandidate(c, foundList.length - 1));
-                $('candidateCount').textContent = `${foundList.length} 件`;
+                $('candidatesList').appendChild(renderCandidate(c));
+                $('candidateCount').textContent = `${foundList.length} 個`;
               }
             }
           }
         }
 
-        if (i % 15 === 0) {
+        if (i % 12 === 0) {
           const elapsed = Math.round(performance.now() - t0);
-          $('statsInfo').textContent = `試行: ${tries.toLocaleString()} / 経過: ${elapsed}ms`;
+          $('statsInfo').textContent = `探した回数: ${tries.toLocaleString()} / 時間: ${elapsed}ms`;
           await new Promise((r) => setTimeout(r, 0));
         }
       }
 
       const totalElapsed = Math.round(performance.now() - t0);
-      $('statsInfo').textContent = `試行: ${tries.toLocaleString()} / 経過: ${totalElapsed}ms`;
+      $('statsInfo').textContent = `探した回数: ${tries.toLocaleString()} / 時間: ${totalElapsed}ms`;
 
       if (foundList.length > 0) {
-        $('statusBadge').textContent = '生成完了';
+        $('statusBadge').textContent = '見つけたじゃ〜！(∩´∀`∩)🎉';
       } else if (abortFlag) {
-        $('statusBadge').textContent = '停止済み';
-        $('formulaOutput').textContent = '探索を停止しました';
+        $('statusBadge').textContent = 'ストップしたべさ';
+        $('latexOutput').innerHTML = '<span class="font-mono text-sm text-amber-300">途中でストップしたじゃ〜！(｀・ω・´)ゞ</span>';
       } else {
-        $('statusBadge').textContent = '一致なし';
-        $('formulaOutput').textContent = '条件に合う式が見つかりませんでした';
-        $('evalInfo').textContent = `目標値: ${targetVal}`;
+        $('statusBadge').textContent = '見つがんねかったじゃ…(；´Д｀)';
+        $('latexOutput').innerHTML = '<span class="font-mono text-sm text-slate-400">この条件だと合う式が見つがんねかったべさ〜！チェックボックス変えてみれじゃ！</span>';
       }
 
       isRunning = false;
