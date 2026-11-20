@@ -77,7 +77,7 @@
     <header class="sticky top-0 z-20 border-b border-slate-800/80 bg-[#05070c]/85 backdrop-blur-md">
       <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
         <a
-          href="./index.html"
+          href="./././index.html"
           class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-700/80 bg-slate-900/90 text-slate-200 hover:text-cyan-300 hover:border-cyan-500/50 transition text-sm font-medium shrink-0"
           aria-label="一番上の index.html に戻るべさ"
         >
@@ -735,9 +735,9 @@
         $('latexOutput').innerHTML = '<span class="font-mono text-sm text-rose-400">目標の数字ばちゃんと入れてみれじゃ〜！</span>';
         return;
       }
-      if (rawDigits.length === 0 || rawDigits.length > 10) {
+      if (rawDigits.length === 0) {
         $('statusBadge').textContent = '数字の個数エラーだべさ';
-        $('latexOutput').innerHTML = '<span class="font-mono text-sm text-rose-400">数字は1個から10個までの間で入れてくれじゃ〜！</span>';
+        $('latexOutput').innerHTML = '<span class="font-mono text-sm text-rose-400">数字は1個から入れてくれじゃ〜！</span>';
         return;
       }
 
