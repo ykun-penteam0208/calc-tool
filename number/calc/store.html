@@ -385,7 +385,7 @@
   </div>
 
   <!-- アプリケーションロジック -->
-  <script>
+ <script>
     // ==========================================
     // 状態管理（State）
     // ==========================================
@@ -574,6 +574,17 @@
       };
     }
 
+    function getDisplayItemAmounts(calc) {
+      const isExcl = settings.priceMode === 'excl';
+      return {
+        mainAmount: isExcl ? calc.finalExcl : calc.finalIncl,
+        origAmount: isExcl ? calc.originalExcl : calc.originalIncl,
+        subLabel: isExcl
+          ? `税込 ${formatYen(calc.finalIncl)}円 / 税(${calc.taxRate}%) ${formatYen(calc.taxAmount)}円`
+          : `税抜 ${formatYen(calc.finalExcl)}円 / 税(${calc.taxRate}%) ${formatYen(calc.taxAmount)}円`
+      };
+    }
+
     function updateSummary() {
       let totalCount = 0;
       let totalOriginal = 0;
@@ -594,9 +605,12 @@
         totalTax += calc.taxAmount;
       });
 
+      const isExcl = settings.priceMode === 'excl';
+      const mainTotal = isExcl ? totalExcl : totalIncl;
+
       // 下部固定バーの更新
       document.getElementById('bottom-count-badge').textContent = `${totalCount}点`;
-      document.getElementById('bottom-grand-total').textContent = formatYen(totalIncl);
+      document.getElementById('bottom-grand-total').textContent = formatYen(mainTotal);
       document.getElementById('bottom-tax-total').textContent = formatYen(totalTax);
 
       const bottomDiscBadge = document.getElementById('bottom-discount-badge');
@@ -614,7 +628,7 @@
       document.getElementById('summary-subtotal-excl').textContent = `${formatYen(totalExcl)} 円`;
       document.getElementById('summary-tax-total').textContent = `${formatYen(totalTax)} 円`;
 
-      updateChangeCalculation(totalIncl);
+      updateChangeCalculation(mainTotal);
       saveToLocalStorage();
     }
 
@@ -660,6 +674,7 @@
 
       items.forEach((item, index) => {
         const calc = calculateItemBreakdown(item);
+        const amounts = getDisplayItemAmounts(calc);
         const placeholder = tsugaruPlaceholders[index % tsugaruPlaceholders.length];
 
         const card = document.createElement('article');
@@ -686,7 +701,7 @@
             </button>
           </div>
 
-          <!-- 2段目：単価・個数・税率（スマホでも押しやすい44px高さ） -->
+          <!-- 2段目：単価・個数・税率 -->
           <div class="grid grid-cols-12 gap-2.5 mb-3.5">
             <!-- 単価 -->
             <div class="col-span-5 sm:col-span-5">
@@ -717,7 +732,7 @@
               </div>
             </div>
 
-            <!-- 税率選択（標準税率を軸に個別変更も可） -->
+            <!-- 税率選択 -->
             <div class="col-span-3 sm:col-span-3">
               <label class="block text-[10px] font-bold text-slate-400 mb-1">税率</label>
               <select data-field="taxMode"
@@ -730,7 +745,7 @@
             </div>
           </div>
 
-          <!-- 3段目：割引・半額シールワンタップバー（横スクロール＆折り返し両対応で指で押しやすい） -->
+          <!-- 3段目：割引・半額シールワンタップバー -->
           <div class="bg-slate-950/65 border border-slate-800/80 rounded-2xl p-2.5 mb-3">
             <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
               <button type="button" data-discount-preset="none"
@@ -775,11 +790,11 @@
           <!-- 4段目：この商品の小計 -->
           <div class="flex items-center justify-between gap-2 pt-0.5">
             <span class="text-[11px] text-slate-400 tabular-nums item-sub-info">
-              税抜 ${formatYen(calc.finalExcl)}円 / 税(${calc.taxRate}%) ${formatYen(calc.taxAmount)}円
+              ${amounts.subLabel}
             </span>
             <div class="flex items-baseline gap-1.5 ml-auto">
-              ${calc.hasDiscount ? `<span class="text-xs text-slate-500 line-through tabular-nums item-orig-price">${formatYen(calc.originalIncl)}円</span>` : ''}
-              <span class="text-lg font-black text-white tabular-nums item-final-price">${formatYen(calc.finalIncl)}</span>
+              ${calc.hasDiscount ? `<span class="text-xs text-slate-500 line-through tabular-nums item-orig-price">${formatYen(amounts.origAmount)}円</span>` : ''}
+              <span class="text-lg font-black text-white tabular-nums item-final-price">${formatYen(amounts.mainAmount)}</span>
               <span class="text-xs font-bold text-indigo-400">円</span>
             </div>
           </div>
@@ -794,13 +809,14 @@
 
     function updateSingleCardDisplay(cardEl, item) {
       const calc = calculateItemBreakdown(item);
+      const amounts = getDisplayItemAmounts(calc);
       const subInfo = cardEl.querySelector('.item-sub-info');
       const finalPrice = cardEl.querySelector('.item-final-price');
       if (subInfo) {
-        subInfo.textContent = `税抜 ${formatYen(calc.finalExcl)}円 / 税(${calc.taxRate}%) ${formatYen(calc.taxAmount)}円`;
+        subInfo.textContent = amounts.subLabel;
       }
       if (finalPrice) {
-        finalPrice.textContent = formatYen(calc.finalIncl);
+        finalPrice.textContent = formatYen(amounts.mainAmount);
       }
       updateSummary();
     }
@@ -1052,16 +1068,18 @@
           showToast('コピーする商品がまだねじゃ！💦', 'warn');
           return;
         }
-        let lines = ['🍎【お買い物計算メモ】🍎'];
+        const unitLabel = settings.priceMode === 'excl' ? '税抜' : '税込';
+        let lines = [`🍎【お買い物計算メモ（${unitLabel}表示）】🍎`];
         items.forEach((item, idx) => {
           const calc = calculateItemBreakdown(item);
+          const amounts = getDisplayItemAmounts(calc);
           const name = item.name.trim() || `商品${idx + 1}`;
           const discText = calc.hasDiscount ? ` (-${formatYen(calc.discountDisplay)}円)` : '';
-          lines.push(`・${name} ×${item.quantity}：${formatYen(calc.finalIncl)}円 [税${calc.taxRate}%]${discText}`);
+          lines.push(`・${name} ×${item.quantity}：${formatYen(amounts.mainAmount)}円 [税${calc.taxRate}%]${discText}`);
         });
         lines.push('------------------------');
         lines.push(`お得分：-${document.getElementById('summary-discount').textContent.replace('- ', '')}`);
-        lines.push(`お支払い合計（税込）：${document.getElementById('bottom-grand-total').textContent} 円`);
+        lines.push(`合計（${unitLabel}）：${document.getElementById('bottom-grand-total').textContent} 円`);
 
         const textarea = document.createElement('textarea');
         textarea.value = lines.join('\n');
@@ -1106,8 +1124,8 @@
 
       document.getElementById('price-mode-desc').textContent =
         settings.priceMode === 'excl'
-          ? '値札の「本体価格」ば入れるとき用だば'
-          : '値札の「税込総額」ば入れるとき用だば';
+          ? '値札の「本体価格」ば入れて税抜表示するべ'
+          : '値札の「税込総額」ば入れて税込表示するべ';
     }
 
     // ==========================================
