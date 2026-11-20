@@ -782,16 +782,16 @@
       const unaryRuleOpts = { allowFactorial, allowTrig, allowInvTrig, allowSqrt };
 
       for (let i = 0; i < sequences.length; i += 1) {
-        if (abortFlag || foundList.length >= 10) break;
+        if (abortFlag || foundList.length >= 20) break;
         const seq = sequences[i];
         const splits = getConcatSplits(seq, allowConcat);
 
         for (const parts of splits) {
-          if (abortFlag || foundList.length >= 10) break;
+          if (abortFlag || foundList.length >= 20) break;
           const variants = getUnaryVariants(parts, unaryRuleOpts);
 
           for (const nodes of variants) {
-            if (abortFlag || foundList.length >= 10) break;
+            if (abortFlag || foundList.length >= 20) break;
             const candidates = buildExpressions(nodes, allowParens, allowPower, 10);
             for (const c of candidates) {
               tries += 1;
