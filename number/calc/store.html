@@ -368,15 +368,12 @@
   </div>
 
   <!-- アプリケーションロジック -->
- <script>
-    // ==========================================
-    // 状態管理（State）
-    // ==========================================
+<script>
     let items = [];
     let settings = {
-      standardTaxRate: 8,    // ひとつの標準税率 (%)
-      priceMode: 'excl',     // 'excl' (税抜入力) | 'incl' (税込入力)
-      rounding: 'floor'      // 'floor' (切り捨て) | 'round' (四捨五入) | 'ceil' (切り上げ)
+      standardTaxRate: 8,
+      priceMode: 'excl',
+      rounding: 'floor'
     };
 
     const tsugaruPlaceholders = [
@@ -389,15 +386,21 @@
       '例: 嶽きみ（とうもろこし）🌽'
     ];
 
-    // ==========================================
-    // ユーティリティ
-    // ==========================================
+    function byId(id) {
+      return document.getElementById(id);
+    }
+
+    function setText(id, text) {
+      const el = byId(id);
+      if (el) el.textContent = text;
+    }
+
     function generateId() {
       return 'item_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
     }
 
     function formatYen(num) {
-      return Math.round(num).toLocaleString('ja-JP');
+      return Math.round(Number(num) || 0).toLocaleString('ja-JP');
     }
 
     function applyRounding(value, method) {
@@ -408,14 +411,14 @@
 
     function escapeHtml(str) {
       if (!str) return '';
-      return str.replace(/[&<>"']/g, m => ({
+      return String(str).replace(/[&<>"']/g, m => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
       })[m]);
     }
 
-    // トースト通知（alert()不使用）
     function showToast(message, type = 'info') {
-      const container = document.getElementById('toast-container');
+      const container = byId('toast-container');
+      if (!container) return;
       const toast = document.createElement('div');
       const styles = {
         info: 'bg-slate-900/95 border-indigo-500/50 text-white',
@@ -436,11 +439,17 @@
       }, 2200);
     }
 
-    // カスタム確認モーダル（confirm()不使用）
     function showConfirm(title, message, onConfirm) {
-      const modal = document.getElementById('confirm-modal');
-      document.getElementById('confirm-title').textContent = title;
-      document.getElementById('confirm-message').textContent = message;
+      const modal = byId('confirm-modal');
+      const okBtn = byId('confirm-ok');
+      const cancelBtn = byId('confirm-cancel');
+      if (!modal || !okBtn || !cancelBtn) {
+        if (typeof onConfirm === 'function') onConfirm();
+        return;
+      }
+
+      setText('confirm-title', title);
+      setText('confirm-message', message);
       modal.classList.remove('hidden');
       modal.classList.add('flex');
 
@@ -450,40 +459,40 @@
         okBtn.removeEventListener('click', handleOk);
         cancelBtn.removeEventListener('click', handleCancel);
       };
-      const handleOk = () => { cleanup(); onConfirm(); };
+      const handleOk = () => { cleanup(); if (typeof onConfirm === 'function') onConfirm(); };
       const handleCancel = () => cleanup();
 
-      const okBtn = document.getElementById('confirm-ok');
-      const cancelBtn = document.getElementById('confirm-cancel');
       okBtn.addEventListener('click', handleOk);
       cancelBtn.addEventListener('click', handleCancel);
     }
 
-    // ==========================================
-    // ポップオーバー開閉制御
-    // ==========================================
     function openOptionsPopover() {
-      const popover = document.getElementById('options-popover');
-      const backdrop = document.getElementById('popover-backdrop');
-      const btn = document.getElementById('toggle-options-btn');
-      popover.classList.remove('hidden');
-      backdrop.classList.remove('hidden');
-      btn.setAttribute('aria-expanded', 'true');
-      btn.classList.add('border-indigo-500', 'bg-slate-800');
+      const popover = byId('options-popover');
+      const backdrop = byId('popover-backdrop');
+      const btn = byId('toggle-options-btn');
+      if (popover) popover.classList.remove('hidden');
+      if (backdrop) backdrop.classList.remove('hidden');
+      if (btn) {
+        btn.setAttribute('aria-expanded', 'true');
+        btn.classList.add('border-indigo-500', 'bg-slate-800');
+      }
     }
 
     function closeOptionsPopover() {
-      const popover = document.getElementById('options-popover');
-      const backdrop = document.getElementById('popover-backdrop');
-      const btn = document.getElementById('toggle-options-btn');
-      popover.classList.add('hidden');
-      backdrop.classList.add('hidden');
-      btn.setAttribute('aria-expanded', 'false');
-      btn.classList.remove('border-indigo-500', 'bg-slate-800');
+      const popover = byId('options-popover');
+      const backdrop = byId('popover-backdrop');
+      const btn = byId('toggle-options-btn');
+      if (popover) popover.classList.add('hidden');
+      if (backdrop) backdrop.classList.add('hidden');
+      if (btn) {
+        btn.setAttribute('aria-expanded', 'false');
+        btn.classList.remove('border-indigo-500', 'bg-slate-800');
+      }
     }
 
     function toggleOptionsPopover() {
-      const popover = document.getElementById('options-popover');
+      const popover = byId('options-popover');
+      if (!popover) return;
       if (popover.classList.contains('hidden')) {
         openOptionsPopover();
       } else {
@@ -491,10 +500,8 @@
       }
     }
 
-    // ==========================================
-    // 計算ロジック
-    // ==========================================
     function getItemTaxRate(item) {
+      if (!item) return Math.max(0, parseFloat(settings.standardTaxRate) || 0);
       if (item.taxMode === 'standard') {
         return Math.max(0, parseFloat(settings.standardTaxRate) || 0);
       }
@@ -508,7 +515,6 @@
       const unitPrice = Math.max(0, parseFloat(item.price) || 0);
       const qty = Math.max(1, parseInt(item.quantity, 10) || 1);
       const taxRate = getItemTaxRate(item);
-      const taxMultiplier = 1 + taxRate / 100;
       const rawLineTotal = unitPrice * qty;
 
       let discountAmountInput = 0;
@@ -533,16 +539,16 @@
 
       if (settings.priceMode === 'excl') {
         originalExcl = rawLineTotal;
-        originalIncl = applyRounding(originalExcl * taxMultiplier, settings.rounding);
         finalExcl = afterDiscountInput;
-        taxAmount = applyRounding(finalExcl * (taxRate / 100), settings.rounding);
+        taxAmount = taxRate > 0 ? applyRounding(finalExcl * (taxRate / 100), settings.rounding) : 0;
         finalIncl = finalExcl + taxAmount;
+        originalIncl = originalExcl + (taxRate > 0 ? applyRounding(originalExcl * (taxRate / 100), settings.rounding) : 0);
       } else {
         originalIncl = rawLineTotal;
-        originalExcl = applyRounding(originalIncl / taxMultiplier, settings.rounding);
         finalIncl = afterDiscountInput;
-        finalExcl = applyRounding(finalIncl / taxMultiplier, settings.rounding);
-        taxAmount = finalIncl - finalExcl;
+        taxAmount = taxRate > 0 ? applyRounding(finalIncl * (taxRate / (100 + taxRate)), settings.rounding) : 0;
+        finalExcl = finalIncl - taxAmount;
+        originalExcl = originalIncl - (taxRate > 0 ? applyRounding(originalIncl * (taxRate / (100 + taxRate)), settings.rounding) : 0);
       }
 
       return {
@@ -591,35 +597,36 @@
       const isExcl = settings.priceMode === 'excl';
       const mainTotal = isExcl ? totalExcl : totalIncl;
 
-      // 下部固定バーの更新
-      document.getElementById('bottom-count-badge').textContent = `${totalCount}点`;
-      document.getElementById('bottom-grand-total').textContent = formatYen(mainTotal);
-      document.getElementById('bottom-tax-total').textContent = formatYen(totalTax);
+      setText('bottom-count-badge', `${totalCount}点`);
+      setText('bottom-grand-total', formatYen(mainTotal));
+      setText('bottom-tax-total', formatYen(totalTax));
 
-      const bottomDiscBadge = document.getElementById('bottom-discount-badge');
-      if (totalDiscount > 0) {
-        bottomDiscBadge.textContent = `-${formatYen(totalDiscount)}円得`;
-        bottomDiscBadge.classList.remove('hidden');
-      } else {
-        bottomDiscBadge.classList.add('hidden');
+      const bottomDiscBadge = byId('bottom-discount-badge');
+      if (bottomDiscBadge) {
+        if (totalDiscount > 0) {
+          bottomDiscBadge.textContent = `-${formatYen(totalDiscount)}円得`;
+          bottomDiscBadge.classList.remove('hidden');
+        } else {
+          bottomDiscBadge.classList.add('hidden');
+        }
       }
 
-      // 詳細パネルの更新
-      document.getElementById('detail-count-badge').textContent = `${totalCount}点`;
-      document.getElementById('summary-original').textContent = `${formatYen(totalOriginal)} 円`;
-      document.getElementById('summary-discount').textContent = `- ${formatYen(totalDiscount)} 円`;
-      document.getElementById('summary-subtotal-excl').textContent = `${formatYen(totalExcl)} 円`;
-      document.getElementById('summary-tax-total').textContent = `${formatYen(totalTax)} 円`;
+      setText('detail-count-badge', `${totalCount}点`);
+      setText('summary-original', `${formatYen(totalOriginal)} 円`);
+      setText('summary-discount', `- ${formatYen(totalDiscount)} 円`);
+      setText('summary-subtotal-excl', `${formatYen(totalExcl)} 円`);
+      setText('summary-tax-total', `${formatYen(totalTax)} 円`);
 
       updateChangeCalculation(mainTotal);
       saveToLocalStorage();
     }
 
     function updateChangeCalculation(grandTotal) {
-      const cashInput = document.getElementById('cash-tendered');
-      const changeEl = document.getElementById('change-amount');
-      const tendered = parseFloat(cashInput.value);
+      const cashInput = byId('cash-tendered');
+      const changeEl = byId('change-amount');
+      if (!cashInput || !changeEl) return;
 
+      const tendered = parseFloat(cashInput.value);
       if (isNaN(tendered) || cashInput.value === '') {
         changeEl.textContent = '--- 円';
         changeEl.className = 'text-sm font-extrabold tabular-nums text-slate-400';
@@ -636,21 +643,19 @@
       }
     }
 
-    // ==========================================
-    // 商品カード描画
-    // ==========================================
     function renderItems() {
-      const listEl = document.getElementById('items-list');
-      const emptyEl = document.getElementById('empty-state');
+      const listEl = byId('items-list');
+      const emptyEl = byId('empty-state');
+      if (!listEl) return;
 
       if (items.length === 0) {
         listEl.innerHTML = '';
-        emptyEl.classList.remove('hidden');
+        if (emptyEl) emptyEl.classList.remove('hidden');
         updateSummary();
         return;
       }
 
-      emptyEl.classList.add('hidden');
+      if (emptyEl) emptyEl.classList.add('hidden');
       listEl.innerHTML = '';
 
       const stdRate = parseFloat(settings.standardTaxRate) || 0;
@@ -667,7 +672,6 @@
         const isCustomDiscount = item.discountType === 'yen' || (item.discountType === 'percent' && ![10, 20, 30].includes(Number(item.discountValue)));
 
         card.innerHTML = `
-          <!-- 1段目：番号・商品名・複製/削除 -->
           <div class="flex items-center gap-2 mb-3.5">
             <span class="w-7 h-7 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-xs font-black flex items-center justify-center shrink-0 tabular-nums">
               ${index + 1}
@@ -684,9 +688,7 @@
             </button>
           </div>
 
-          <!-- 2段目：単価・個数・税率 -->
           <div class="grid grid-cols-12 gap-2.5 mb-3.5">
-            <!-- 単価 -->
             <div class="col-span-5 sm:col-span-5">
               <label class="block text-[10px] font-bold text-slate-400 mb-1">
                 単価（${settings.priceMode === 'excl' ? '税抜' : '税込'}）
@@ -698,7 +700,6 @@
               </div>
             </div>
 
-            <!-- 個数ステッパー -->
             <div class="col-span-4 sm:col-span-4">
               <label class="block text-[10px] font-bold text-slate-400 mb-1">個数</label>
               <div class="flex items-center min-h-[44px] bg-slate-950 border border-slate-700/90 rounded-xl overflow-hidden">
@@ -715,7 +716,6 @@
               </div>
             </div>
 
-            <!-- 税率選択 -->
             <div class="col-span-3 sm:col-span-3">
               <label class="block text-[10px] font-bold text-slate-400 mb-1">税率</label>
               <select data-field="taxMode"
@@ -728,7 +728,6 @@
             </div>
           </div>
 
-          <!-- 3段目：割引・半額シールワンタップバー -->
           <div class="bg-slate-950/65 border border-slate-800/80 rounded-2xl p-2.5 mb-3">
             <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
               <button type="button" data-discount-preset="none"
@@ -757,7 +756,6 @@
               </button>
             </div>
 
-            <!-- 自由入力フィールド -->
             <div class="${isCustomDiscount ? 'flex' : 'hidden'} items-center justify-end gap-2 mt-2.5 pt-2.5 border-t border-slate-800/80">
               <span class="text-[11px] font-bold text-slate-400">割引：</span>
               <input type="number" data-field="discountValue" value="${item.discountValue || ''}" placeholder="0" min="0" inputmode="numeric"
@@ -770,7 +768,6 @@
             </div>
           </div>
 
-          <!-- 4段目：この商品の小計 -->
           <div class="flex items-center justify-between gap-2 pt-0.5">
             <span class="text-[11px] text-slate-400 tabular-nums item-sub-info">
               ${amounts.subLabel}
@@ -786,7 +783,9 @@
         listEl.appendChild(card);
       });
 
-      lucide.createIcons();
+      if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        window.lucide.createIcons();
+      }
       updateSummary();
     }
 
@@ -804,17 +803,14 @@
       updateSummary();
     }
 
-    // ==========================================
-    // CRUD操作
-    // ==========================================
     function addItem(preset = null) {
       const newItem = preset ? { ...preset, id: generateId() } : {
         id: generateId(),
         name: '',
         price: 0,
         quantity: 1,
-        taxMode: 'standard',   // 'standard' | '8' | '10' | '0'
-        discountType: 'none',  // 'none' | 'half' | 'percent' | 'yen'
+        taxMode: 'standard',
+        discountType: 'none',
         discountValue: 0
       };
       items.push(newItem);
@@ -842,9 +838,6 @@
       showToast('お試しサンプルば3つ入れたべさ！🍎✨', 'success');
     }
 
-    // ==========================================
-    // ストレージ保存・復元
-    // ==========================================
     function saveToLocalStorage() {
       try {
         localStorage.setItem('tsugaru_calc_store_v2', JSON.stringify({ items, settings }));
@@ -862,25 +855,24 @@
       } catch (e) {}
     }
 
-    // ==========================================
-    // イベントリスナー初期化
-    // ==========================================
+    function bindClick(id, handler) {
+      const el = byId(id);
+      if (el) el.addEventListener('click', handler);
+    }
+
     function initEventListeners() {
-      // ポップオーバー開閉
-      document.getElementById('toggle-options-btn').addEventListener('click', (e) => {
+      bindClick('toggle-options-btn', (e) => {
         e.stopPropagation();
         toggleOptionsPopover();
       });
-      document.getElementById('close-options-btn').addEventListener('click', closeOptionsPopover);
-      document.getElementById('done-options-btn').addEventListener('click', closeOptionsPopover);
-      document.getElementById('popover-backdrop').addEventListener('click', closeOptionsPopover);
+      bindClick('close-options-btn', closeOptionsPopover);
+      bindClick('done-options-btn', closeOptionsPopover);
+      bindClick('popover-backdrop', closeOptionsPopover);
 
-      // Escキーでポップオーバー閉じる
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') closeOptionsPopover();
       });
 
-      // 標準税率プリセット＆自由入力
       document.querySelectorAll('.tax-preset-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           settings.standardTaxRate = parseFloat(btn.dataset.taxPreset);
@@ -890,13 +882,15 @@
         });
       });
 
-      document.getElementById('standard-tax-input').addEventListener('input', (e) => {
-        settings.standardTaxRate = Math.max(0, parseFloat(e.target.value) || 0);
-        syncSettingsUI(false);
-        renderItems();
-      });
+      const stdTaxInput = byId('standard-tax-input');
+      if (stdTaxInput) {
+        stdTaxInput.addEventListener('input', (e) => {
+          settings.standardTaxRate = Math.max(0, parseFloat(e.target.value) || 0);
+          syncSettingsUI(false);
+          renderItems();
+        });
+      }
 
-      // 税抜/税込モード切替
       document.querySelectorAll('.price-mode-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           settings.priceMode = btn.dataset.mode;
@@ -906,24 +900,22 @@
         });
       });
 
-      // 端数処理
-      document.getElementById('rounding-select').addEventListener('change', (e) => {
-        settings.rounding = e.target.value;
-        renderItems();
-      });
+      const roundingSelect = byId('rounding-select');
+      if (roundingSelect) {
+        roundingSelect.addEventListener('change', (e) => {
+          settings.rounding = e.target.value;
+          renderItems();
+        });
+      }
 
-      // 商品追加
-      document.getElementById('add-item-btn').addEventListener('click', () => {
+      bindClick('add-item-btn', () => {
         addItem();
         showToast('商品枠ば追加したじゃ！🛒', 'info');
       });
-      document.getElementById('empty-add-btn').addEventListener('click', () => addItem());
+      bindClick('empty-add-btn', () => addItem());
+      bindClick('add-sample-btn', addSampleItems);
 
-      // サンプル追加
-      document.getElementById('add-sample-btn').addEventListener('click', addSampleItems);
-
-      // 全部消す
-      document.getElementById('clear-all-btn').addEventListener('click', () => {
+      bindClick('clear-all-btn', () => {
         if (items.length === 0) {
           showToast('もう空っぽだべさ！😂', 'warn');
           return;
@@ -933,120 +925,124 @@
           '今入力してる商品ば全部リセットするけど、ほんとにいいんだば？',
           () => {
             items = [];
-            document.getElementById('cash-tendered').value = '';
+            const cashInput = byId('cash-tendered');
+            if (cashInput) cashInput.value = '';
             renderItems();
             showToast('スッキリ全部消したべ！✨', 'info');
           }
         );
       });
 
-      // 商品リストのイベント委譲
-      const itemsListEl = document.getElementById('items-list');
+      const itemsListEl = byId('items-list');
+      if (itemsListEl) {
+        itemsListEl.addEventListener('input', (e) => {
+          const card = e.target.closest('[data-id]');
+          if (!card) return;
+          const item = items.find(i => i.id === card.dataset.id);
+          if (!item) return;
 
-      itemsListEl.addEventListener('input', (e) => {
-        const card = e.target.closest('[data-id]');
-        if (!card) return;
-        const item = items.find(i => i.id === card.dataset.id);
-        if (!item) return;
+          const field = e.target.dataset.field;
+          if (field === 'name') {
+            item.name = e.target.value;
+            saveToLocalStorage();
+          } else if (field === 'price') {
+            item.price = parseFloat(e.target.value) || 0;
+            updateSingleCardDisplay(card, item);
+          } else if (field === 'quantity') {
+            item.quantity = Math.max(1, parseInt(e.target.value, 10) || 1);
+            updateSingleCardDisplay(card, item);
+          } else if (field === 'discountValue') {
+            item.discountValue = parseFloat(e.target.value) || 0;
+            updateSingleCardDisplay(card, item);
+          }
+        });
 
-        const field = e.target.dataset.field;
-        if (field === 'name') {
-          item.name = e.target.value;
-          saveToLocalStorage();
-        } else if (field === 'price') {
-          item.price = parseFloat(e.target.value) || 0;
-          updateSingleCardDisplay(card, item);
-        } else if (field === 'quantity') {
-          item.quantity = Math.max(1, parseInt(e.target.value, 10) || 1);
-          updateSingleCardDisplay(card, item);
-        } else if (field === 'discountValue') {
-          item.discountValue = parseFloat(e.target.value) || 0;
-          updateSingleCardDisplay(card, item);
-        }
-      });
+        itemsListEl.addEventListener('change', (e) => {
+          const card = e.target.closest('[data-id]');
+          if (!card) return;
+          const item = items.find(i => i.id === card.dataset.id);
+          if (!item) return;
 
-      itemsListEl.addEventListener('change', (e) => {
-        const card = e.target.closest('[data-id]');
-        if (!card) return;
-        const item = items.find(i => i.id === card.dataset.id);
-        if (!item) return;
-
-        const field = e.target.dataset.field;
-        if (field === 'taxMode' || field === 'discountType') {
-          item[field] = e.target.value;
-          renderItems();
-        }
-      });
-
-      itemsListEl.addEventListener('click', (e) => {
-        const card = e.target.closest('[data-id]');
-        if (!card) return;
-        const index = items.findIndex(i => i.id === card.dataset.id);
-        if (index === -1) return;
-        const item = items[index];
-
-        const actionBtn = e.target.closest('[data-action]');
-        if (actionBtn) {
-          const action = actionBtn.dataset.action;
-          if (action === 'delete') {
-            items.splice(index, 1);
+          const field = e.target.dataset.field;
+          if (field === 'taxMode' || field === 'discountType') {
+            item[field] = e.target.value;
             renderItems();
-            showToast('1つ消したじゃ', 'info');
-          } else if (action === 'duplicate') {
-            const copy = { ...item, id: generateId(), name: item.name ? `${item.name} (コピー)` : '' };
-            items.splice(index + 1, 0, copy);
-            renderItems();
-            showToast('同じ商品ば複製したべ！👍', 'success');
-          } else if (action === 'inc-qty') {
-            item.quantity = (parseInt(item.quantity, 10) || 1) + 1;
-            renderItems();
-          } else if (action === 'dec-qty') {
-            if (item.quantity > 1) {
-              item.quantity -= 1;
+          }
+        });
+
+        itemsListEl.addEventListener('click', (e) => {
+          const card = e.target.closest('[data-id]');
+          if (!card) return;
+          const index = items.findIndex(i => i.id === card.dataset.id);
+          if (index === -1) return;
+          const item = items[index];
+
+          const actionBtn = e.target.closest('[data-action]');
+          if (actionBtn) {
+            const action = actionBtn.dataset.action;
+            if (action === 'delete') {
+              items.splice(index, 1);
               renderItems();
+              showToast('1つ消したじゃ', 'info');
+            } else if (action === 'duplicate') {
+              const copy = { ...item, id: generateId(), name: item.name ? `${item.name} (コピー)` : '' };
+              items.splice(index + 1, 0, copy);
+              renderItems();
+              showToast('同じ商品ば複製したべ！👍', 'success');
+            } else if (action === 'inc-qty') {
+              item.quantity = (parseInt(item.quantity, 10) || 1) + 1;
+              renderItems();
+            } else if (action === 'dec-qty') {
+              if (item.quantity > 1) {
+                item.quantity -= 1;
+                renderItems();
+              }
             }
+            return;
           }
-          return;
-        }
 
-        const presetBtn = e.target.closest('[data-discount-preset]');
-        if (presetBtn) {
-          const preset = presetBtn.dataset.discountPreset;
-          if (preset === 'none') {
-            item.discountType = 'none';
-            item.discountValue = 0;
-          } else if (preset === 'half') {
-            item.discountType = 'half';
-            item.discountValue = 50;
-            showToast('半額シール適用したべさ！🔥', 'success');
-          } else if (['10', '20', '30'].includes(preset)) {
-            item.discountType = 'percent';
-            item.discountValue = Number(preset);
-          } else if (preset === 'custom') {
-            item.discountType = 'percent';
-            item.discountValue = 15;
+          const presetBtn = e.target.closest('[data-discount-preset]');
+          if (presetBtn) {
+            const preset = presetBtn.dataset.discountPreset;
+            if (preset === 'none') {
+              item.discountType = 'none';
+              item.discountValue = 0;
+            } else if (preset === 'half') {
+              item.discountType = 'half';
+              item.discountValue = 50;
+              showToast('半額シール適用したべさ！🔥', 'success');
+            } else if (['10', '20', '30'].includes(preset)) {
+              item.discountType = 'percent';
+              item.discountValue = Number(preset);
+            } else if (preset === 'custom') {
+              item.discountType = 'percent';
+              item.discountValue = 15;
+            }
+            renderItems();
           }
-          renderItems();
-        }
-      });
+        });
+      }
 
-      // お釣り計算
-      document.getElementById('cash-tendered').addEventListener('input', () => updateSummary());
+      const cashInput = byId('cash-tendered');
+      if (cashInput) {
+        cashInput.addEventListener('input', () => updateSummary());
+      }
       document.querySelectorAll('.quick-cash-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           const val = Number(btn.dataset.cash);
-          const input = document.getElementById('cash-tendered');
+          const input = byId('cash-tendered');
+          if (!input) return;
           input.value = (parseFloat(input.value) || 0) + val;
           updateSummary();
         });
       });
-      document.getElementById('clear-cash-btn').addEventListener('click', () => {
-        document.getElementById('cash-tendered').value = '';
+      bindClick('clear-cash-btn', () => {
+        const input = byId('cash-tendered');
+        if (input) input.value = '';
         updateSummary();
       });
 
-      // メモコピー
-      document.getElementById('copy-receipt-btn').addEventListener('click', () => {
+      bindClick('copy-receipt-btn', () => {
         if (items.length === 0) {
           showToast('コピーする商品がまだねじゃ！💦', 'warn');
           return;
@@ -1061,8 +1057,10 @@
           lines.push(`・${name} ×${item.quantity}：${formatYen(amounts.mainAmount)}円 [税${calc.taxRate}%]${discText}`);
         });
         lines.push('------------------------');
-        lines.push(`お得分：-${document.getElementById('summary-discount').textContent.replace('- ', '')}`);
-        lines.push(`合計（${unitLabel}）：${document.getElementById('bottom-grand-total').textContent} 円`);
+        const discEl = byId('summary-discount');
+        const grandEl = byId('bottom-grand-total');
+        lines.push(`お得分：-${discEl ? discEl.textContent.replace('- ', '') : '0 円'}`);
+        lines.push(`合計（${unitLabel}）：${grandEl ? grandEl.textContent : '0'} 円`);
 
         const textarea = document.createElement('textarea');
         textarea.value = lines.join('\n');
@@ -1082,11 +1080,16 @@
 
     function syncSettingsUI(updateTaxInput = true) {
       const rate = parseFloat(settings.standardTaxRate) || 0;
-      if (updateTaxInput) {
-        document.getElementById('standard-tax-input').value = rate;
+      const taxInput = byId('standard-tax-input');
+      if (updateTaxInput && taxInput) {
+        taxInput.value = rate;
       }
-      document.getElementById('header-tax-badge').textContent = `税${rate}%`;
-      document.getElementById('rounding-select').value = settings.rounding;
+      setText('header-tax-badge', `税${rate}%`);
+
+      const roundingEl = byId('rounding-select');
+      if (roundingEl) {
+        roundingEl.value = settings.rounding;
+      }
 
       document.querySelectorAll('.tax-preset-btn').forEach(btn => {
         const presetRate = parseFloat(btn.dataset.taxPreset);
@@ -1105,21 +1108,19 @@
         }
       });
 
-      document.getElementById('price-mode-desc').textContent =
+      setText(
+        'price-mode-desc',
         settings.priceMode === 'excl'
           ? '値札の「本体価格」ば入れて税抜表示するべ'
-          : '値札の「税込総額」ば入れて税込表示するべ';
+          : '値札の「税込総額」ば入れて税込表示するべ'
+      );
     }
 
-    // ==========================================
-    // 起動処理
-    // ==========================================
     window.addEventListener('DOMContentLoaded', () => {
       loadFromLocalStorage();
       syncSettingsUI();
       initEventListeners();
 
-      // 最初は必ずオプションポップオーバーを閉じた状態にする
       closeOptionsPopover();
 
       if (items.length === 0) {
@@ -1127,7 +1128,9 @@
       } else {
         renderItems();
       }
-      lucide.createIcons();
+      if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        window.lucide.createIcons();
+      }
     });
   </script>
 </body>
